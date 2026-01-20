@@ -1,5 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './TrajectoryVisualizer.css'
+import { CommentFloatingButton, CommentPanel } from './comments'
+import './comments/Comments.css'
+import { useComments } from '../hooks/useComments'
+import { useUsername } from '../hooks/useUsername'
 
 const TrajectoryVisualizer = () => {
   const [selectedTrajectory, setSelectedTrajectory] = useState(null)
@@ -23,6 +27,33 @@ const TrajectoryVisualizer = () => {
   // Modal state for configuration display
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [modalClosing, setModalClosing] = useState(false)
+
+  // Comments state
+  const [showComments, setShowComments] = useState(false)
+
+  // Build simulation key for comments
+  const simulationKey = useMemo(() => {
+    if (!selectedSubmission || !selectedFile || !selectedTask) return null
+    const submission = selectedSubmission.submissionDir
+    const trajectory = selectedFile.replace('.json', '')
+    const simulation = `task${selectedTask.task_id}_trial${selectedTask.trial || 0}`
+    return `${submission}:${trajectory}:${simulation}`
+  }, [selectedSubmission, selectedFile, selectedTask])
+
+  // Use username hook
+  const { username, setUsername: setUsernameValue } = useUsername()
+
+  // Use comments hook
+  const {
+    comments,
+    count: commentCount,
+    isLoading: commentsLoading,
+    error: commentsError,
+    addComment,
+    editComment,
+    deleteComment,
+    refresh: refreshComments
+  } = useComments(simulationKey)
 
   // Handle modal close with animation
   const handleCloseModal = () => {
@@ -738,6 +769,28 @@ const TrajectoryVisualizer = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Comments Feature */}
+                <CommentFloatingButton
+                  count={commentCount}
+                  isOpen={showComments}
+                  onClick={() => setShowComments(!showComments)}
+                  isLoading={commentsLoading}
+                />
+
+                <CommentPanel
+                  isOpen={showComments}
+                  onClose={() => setShowComments(false)}
+                  username={username}
+                  comments={comments}
+                  isLoading={commentsLoading}
+                  error={commentsError}
+                  onAddComment={addComment}
+                  onEditComment={editComment}
+                  onDeleteComment={deleteComment}
+                  onRefresh={refreshComments}
+                  onSetUsername={setUsernameValue}
+                />
               </div>
             )}
 
