@@ -74,6 +74,9 @@ experiments = [
     "seaborn>=0.13.2",
     "scikit-learn>=1.6.1",
 ]
+mcp = [
+    "fastmcp>=2.0.0",
+]
 all = [
     "tau2[voice,knowledge,gym,dev,experiments]",
 ]
