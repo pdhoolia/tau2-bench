@@ -1,5 +1,17 @@
 {
   "mcpServers": {
+    "_comment_unified": "Unified HTTP server (all domains on single port) - run: python -m tau2.mcp.unified_server --port 8000",
+    "tau2-airline-unified": {
+      "url": "http://localhost:8000/mcp/airline"
+    },
+    "tau2-retail-unified": {
+      "url": "http://localhost:8000/mcp/retail"
+    },
+    "tau2-telecom-unified": {
+      "url": "http://localhost:8000/mcp/telecom"
+    },
+
+    "_comment_stdio": "Stdio transport (for local Claude Desktop use)",
     "tau2-airline-stdio": {
       "command": "python",
       "args": ["-m", "tau2.mcp", "--domain", "airline"],
@@ -24,13 +36,15 @@
         "PYTHONPATH": "/path/to/tau2-bench/src"
       }
     },
-    "tau2-airline-http": {
+
+    "_comment_separate": "Separate HTTP servers (one port per domain)",
+    "tau2-airline-http-separate": {
       "url": "http://localhost:8000/mcp"
     },
-    "tau2-retail-http": {
+    "tau2-retail-http-separate": {
       "url": "http://localhost:8001/mcp"
     },
-    "tau2-telecom-http": {
+    "tau2-telecom-http-separate": {
       "url": "http://localhost:8002/mcp"
     }
   }

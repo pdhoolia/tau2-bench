@@ -19,18 +19,39 @@ pip install -e ".[mcp]"
 
 ## Usage
 
-### Unified Command (Recommended)
+### Unified HTTP Server (Recommended for Remote Access)
+
+Run all domains on a single port with different paths:
+
+```bash
+# Start unified server (all domains on one port)
+python -m tau2.mcp.unified_server --port 8000
+
+# Endpoints:
+#   http://localhost:8000/mcp/airline
+#   http://localhost:8000/mcp/retail
+#   http://localhost:8000/mcp/telecom
+#   http://localhost:8000/info  (server info)
+```
+
+This is ideal for:
+
+- **Tunneling**: Only one ngrok/cloudflare tunnel needed
+- **Deployment**: Single container/process for all domains
+- **Testing**: Switch between domains without port changes
+
+### Single Domain (stdio or HTTP)
 
 ```bash
 # Run airline server (default) with stdio
 python -m tau2.mcp
 
-# Run specific domain
+# Run specific domain with stdio
 python -m tau2.mcp --domain airline
 python -m tau2.mcp --domain retail
 python -m tau2.mcp --domain telecom
 
-# Run with HTTP transport
+# Run single domain with HTTP (separate ports)
 python -m tau2.mcp --domain airline --transport http --port 8000
 python -m tau2.mcp --domain retail --transport http --port 8001
 python -m tau2.mcp --domain telecom --transport http --port 8002
@@ -97,7 +118,23 @@ Add to your Claude Desktop MCP config:
 
 ### For Remote Access (HTTP)
 
-Start the servers:
+**Option 1: Unified Server (Recommended)**
+
+Single port, multiple endpoints:
+
+```bash
+python -m tau2.mcp.unified_server --port 8000
+```
+
+Connect using:
+
+- Airline: `http://localhost:8000/mcp/airline`
+- Retail: `http://localhost:8000/mcp/retail`
+- Telecom: `http://localhost:8000/mcp/telecom`
+
+**Option 2: Separate Servers**
+
+Multiple ports, one domain each:
 
 ```bash
 python -m tau2.mcp --domain airline --transport http --port 8000
@@ -105,7 +142,7 @@ python -m tau2.mcp --domain retail --transport http --port 8001
 python -m tau2.mcp --domain telecom --transport http --port 8002
 ```
 
-Then connect using the MCP endpoints:
+Connect using:
 
 - Airline: `http://localhost:8000/mcp`
 - Retail: `http://localhost:8001/mcp`
