@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "tau2-airline-stdio": {
+      "command": "python",
+      "args": ["-m", "tau2.mcp", "--domain", "airline"],
+      "cwd": "/path/to/tau2-bench",
+      "env": {
+        "PYTHONPATH": "/path/to/tau2-bench/src"
+      }
+    },
+    "tau2-retail-stdio": {
+      "command": "python",
+      "args": ["-m", "tau2.mcp", "--domain", "retail"],
+      "cwd": "/path/to/tau2-bench",
+      "env": {
+        "PYTHONPATH": "/path/to/tau2-bench/src"
+      }
+    },
+    "tau2-telecom-stdio": {
+      "command": "python",
+      "args": ["-m", "tau2.mcp", "--domain", "telecom"],
+      "cwd": "/path/to/tau2-bench",
+      "env": {
+        "PYTHONPATH": "/path/to/tau2-bench/src"
+      }
+    },
+    "tau2-airline-http": {
+      "url": "http://localhost:8000/mcp"
+    },
+    "tau2-retail-http": {
+      "url": "http://localhost:8001/mcp"
+    },
+    "tau2-telecom-http": {
+      "url": "http://localhost:8002/mcp"
+    }
+  }
+}
