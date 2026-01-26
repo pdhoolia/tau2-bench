@@ -183,16 +183,16 @@ Examples:
     )
 
     print(f"""
-╔══════════════════════════════════════════════════════════════════╗
-║                    Tau2-Bench Unified MCP Server                 ║
-╠══════════════════════════════════════════════════════════════════╣
-║  MCP Endpoints:                                                  ║
-║    • Airline:  http://{args.host}:{args.port}/mcp/airline        ║
-║    • Retail:   http://{args.host}:{args.port}/mcp/retail         ║
-║    • Telecom:  http://{args.host}:{args.port}/mcp/telecom        ║
-║                                                                  ║
-║  Info:         http://{args.host}:{args.port}/info               ║
-╚══════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════
+║                    Tau2-Bench Unified MCP Server                 
+╠══════════════════════════════════════════════════════════════════
+║  MCP Endpoints:
+║    • Airline:  http://{args.host}:{args.port}/mcp/airline
+║    • Retail:   http://{args.host}:{args.port}/mcp/retail
+║    • Telecom:  http://{args.host}:{args.port}/mcp/telecom
+║
+║  Info:         http://{args.host}:{args.port}/info
+╚══════════════════════════════════════════════════════════════════
     """)
 
     uvicorn.run(app, host=args.host, port=args.port)
