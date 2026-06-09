@@ -1,0 +1,226 @@
+"""claude_harness agent: drive Claude Code as a domain harness, score in tau2.
+
+Architecture B ("From Agents to Harnesses"): Claude runs its full agentic loop —
+skills disclosed, scripts computing, PreToolUse hooks firing — and calls the real
+domain tools over MCP. Those calls happen side-band, so to keep tau2's evaluator
+valid we *replay* them through the normal orchestrator loop:
+
+  user turn ->  run `claude -p` once  ->  it makes domain tool calls c0..cN + text
+            ->  emit c0 as an AssistantMessage(tool_call); tau2 executes it
+            ->  on the returned ToolMessage, emit c1; ... ; then emit the text
+
+Because tau2 executes each replayed call against its own environment and records
+(AssistantMessage(tool_call), ToolMessage) pairs in the trajectory, the ACTION and
+DB evaluators see exactly what they need — with zero core changes. Claude's
+non-domain tool use (Bash for scripts, Read, skills) is filtered out; only the
+domain MCP calls are replayed.
+
+The agent depends on a ``runner`` with ``run_turn(prompt, session_id) -> ParsedTurn``
+and ``close()``. The factory wires the real ClaudeCLIRunner; tests inject a fake.
+"""
+
+from __future__ import annotations
+
+import os
+import tempfile
+import uuid
+from pathlib import Path
+from typing import Optional, Protocol
+
+from loguru import logger
+from pydantic import BaseModel, ConfigDict
+
+from tau2.agent.base_agent import HalfDuplexAgent, ValidAgentInputMessage
+from tau2.data_model.message import (
+    AssistantMessage,
+    Message,
+    ToolCall,
+    UserMessage,
+)
+
+DEFAULT_HARNESS_SYSTEM_PROMPT = (
+    "You are the retail customer-service agent. Use the retail-harness skills, "
+    "scripts, and tools to help the user according to policy. Authenticate the "
+    "user before any account action, confirm every database write before making "
+    "it, and rely on your skills and the deterministic guardrails rather than "
+    "improvising policy."
+)
+
+# Repo-relative default location of the retail harness plugin.
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+_DEFAULT_PLUGIN_DIR = _REPO_ROOT / "harnesses" / "plugins" / "retail-harness"
+
+
+class TurnRunner(Protocol):
+    """Minimal interface the agent needs from a claude driver."""
+
+    def run_turn(self, prompt: str, session_id: Optional[str]): ...
+
+    def close(self) -> None: ...
+
+
+class ClaudeHarnessAgentState(BaseModel):
+    """Per-conversation state for the claude_harness agent."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    session_id: Optional[str] = None
+    pending_tool_calls: list[ToolCall] = []
+    pending_final_text: Optional[str] = None
+    turn_cost: float = 0.0
+
+
+class ClaudeHarnessAgent(HalfDuplexAgent[ClaudeHarnessAgentState]):
+    """Half-duplex agent that proxies to a headless Claude Code harness."""
+
+    def __init__(
+        self,
+        tools,
+        domain_policy: str,
+        *,
+        runner: TurnRunner,
+        mcp_server_name: str = "tau2-retail",
+        empty_reply: str = "Is there anything else I can help you with?",
+    ):
+        super().__init__(tools=tools, domain_policy=domain_policy)
+        self.runner = runner
+        self.mcp_server_name = mcp_server_name
+        self.tool_prefix = f"mcp__{mcp_server_name}__"
+        self.empty_reply = empty_reply
+
+    # -- lifecycle -----------------------------------------------------------
+
+    def get_init_state(
+        self, message_history: Optional[list[Message]] = None
+    ) -> ClaudeHarnessAgentState:
+        return ClaudeHarnessAgentState()
+
+    def set_seed(self, seed: int) -> None:  # pragma: no cover - best effort
+        # `claude -p` has no first-class seed; recorded for traceability only.
+        logger.debug(f"claude_harness seed requested ({seed}); no-op for claude -p")
+
+    def stop(self, message=None, state=None) -> None:
+        try:
+            self.runner.close()
+        except Exception as e:  # pragma: no cover - teardown best effort
+            logger.warning(f"Error closing claude_harness runner: {e}")
+
+    # -- core loop -----------------------------------------------------------
+
+    def generate_next_message(
+        self, message: ValidAgentInputMessage, state: ClaudeHarnessAgentState
+    ) -> tuple[AssistantMessage, ClaudeHarnessAgentState]:
+        if isinstance(message, UserMessage):
+            # Start of an agent turn: run one full Claude harness invocation.
+            prompt = message.content or "(The user has connected.)"
+            parsed = self.runner.run_turn(prompt, state.session_id)
+            if parsed.session_id:
+                state.session_id = parsed.session_id
+            state.pending_tool_calls = [
+                self._to_tau2_tool_call(rc)
+                for rc in parsed.tool_calls
+                if self._is_domain_tool(rc.name)
+            ]
+            state.pending_final_text = parsed.final_text or ""
+            state.turn_cost = parsed.cost_usd or 0.0
+            if parsed.is_error:
+                logger.warning("claude -p reported an error result for this turn")
+            return self._emit_next(state)
+
+        # Otherwise this is a ToolMessage/MultiToolMessage: the result of a
+        # replayed call. Claude already has its own result, so we ignore the
+        # content and simply emit the next buffered call (or the final text).
+        return self._emit_next(state)
+
+    def _emit_next(
+        self, state: ClaudeHarnessAgentState
+    ) -> tuple[AssistantMessage, ClaudeHarnessAgentState]:
+        if state.pending_tool_calls:
+            tc = state.pending_tool_calls.pop(0)
+            return AssistantMessage(role="assistant", tool_calls=[tc]), state
+        text = state.pending_final_text or self.empty_reply
+        if not state.pending_final_text:
+            logger.warning(
+                "claude -p produced no final text this turn; using fallback reply"
+            )
+        cost = state.turn_cost
+        state.pending_final_text = None
+        state.turn_cost = 0.0
+        return AssistantMessage.text(text, cost=cost), state
+
+    # -- helpers -------------------------------------------------------------
+
+    def _is_domain_tool(self, name: str) -> bool:
+        return bool(name) and name.startswith(self.tool_prefix)
+
+    def _to_tau2_tool_call(self, rc) -> ToolCall:
+        """Map a Claude MCP tool_use to a tau2 ToolCall executed by the env.
+
+        The id is freshly assigned: tau2's orchestrator echoes it onto the
+        resulting ToolMessage, so alignment is automatic. The name has the
+        ``mcp__<server>__`` prefix stripped to the bare toolkit method name.
+        """
+        bare_name = rc.name[len(self.tool_prefix) :]
+        return ToolCall(
+            id=uuid.uuid4().hex,
+            name=bare_name,
+            arguments=rc.arguments or {},
+            requestor="assistant",
+        )
+
+
+# =============================================================================
+# Factory
+# =============================================================================
+
+
+def _resolve_plugin_dir() -> str:
+    return os.environ.get("TAU2_RETAIL_HARNESS_PLUGIN_DIR", str(_DEFAULT_PLUGIN_DIR))
+
+
+def create_claude_harness_agent(tools, domain_policy, **kwargs):
+    """Factory for the claude_harness (retail) agent.
+
+    Builds a per-simulation ClaudeCLIRunner that (a) seeds an isolated retail DB
+    for the task, (b) launches the retail MCP server against it, and (c) drives
+    `claude -p` with the retail-harness plugin. The agent-llm is forwarded as the
+    Claude CLI ``--model`` (use a Claude model id the CLI understands).
+
+    Recognized llm_args overrides: ``mcp_server_name``, ``max_turns``,
+    ``permission_mode``, ``append_system_prompt``, ``plugin_dir``, ``claude_bin``,
+    ``extra_cli_args``.
+    """
+    from tau2.agent.claude_harness.cli_runner import ClaudeCLIRunner
+    from tau2.agent.claude_harness.task_db import seed_retail_db_for_task
+
+    llm = kwargs.get("llm")
+    llm_args = dict(kwargs.get("llm_args") or {})
+    task = kwargs.get("task")
+
+    mcp_server_name = llm_args.get("mcp_server_name", "tau2-retail")
+    plugin_dir = llm_args.get("plugin_dir", _resolve_plugin_dir())
+
+    work_dir = Path(tempfile.mkdtemp(prefix="tau2_claude_harness_"))
+    db_path = seed_retail_db_for_task(task, work_dir / "db.json")
+
+    runner = ClaudeCLIRunner(
+        db_path=db_path,
+        plugin_dir=plugin_dir,
+        work_dir=work_dir,
+        mcp_server_name=mcp_server_name,
+        model=llm,
+        append_system_prompt=llm_args.get(
+            "append_system_prompt", DEFAULT_HARNESS_SYSTEM_PROMPT
+        ),
+        max_turns=int(llm_args.get("max_turns", 40)),
+        permission_mode=llm_args.get("permission_mode", "bypassPermissions"),
+        claude_bin=llm_args.get("claude_bin", "claude"),
+        extra_cli_args=llm_args.get("extra_cli_args"),
+    )
+
+    return ClaudeHarnessAgent(
+        tools=tools,
+        domain_policy=domain_policy,
+        runner=runner,
+        mcp_server_name=mcp_server_name,
+    )
