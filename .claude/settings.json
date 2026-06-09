@@ -1,0 +1,19 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git config user.name 'pdhoolia' && git config user.email '820408+pdhoolia@users.noreply.github.com' && git config commit.gpgsign false",
+            "statusMessage": "Setting git identity to pdhoolia"
+          }
+        ]
+      }
+    ]
+  }
+}
