@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Memory We Don't Measure — A Position on Benchmarking Agent Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16242b;
+    --paper:#f7f5f0;
+    --raised:#fffefb;
+    --petrol:#1f4e5f;
+    --petrol-deep:#143642;
+    --ember:#c2701f;
+    --ember-soft:#e7a85a;
+    --mist:#6b7b80;
+    --line:#ddd6c8;
+    --line-soft:#e8e2d6;
+    --display:"Fraunces",Georgia,serif;
+    --body:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-weight:400;
+    line-height:1.62;
+    font-size:17px;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- eyebrows / mono labels ---------- */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--petrol);
+    font-weight:500;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    border-bottom:1px solid var(--line);
+    padding:22px 0 18px;
+  }
+  .masthead .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;}
+  .masthead .mark{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist);}
+  .masthead .mark b{color:var(--ink);font-weight:600;}
+  .masthead .doc{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--mist);}
+
+  /* ---------- hero ---------- */
+  .hero{padding:72px 0 28px;}
+  .hero h1{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:clamp(38px,6.4vw,68px);
+    line-height:1.02;
+    letter-spacing:-.015em;
+    margin:18px 0 0;
+    color:var(--petrol-deep);
+  }
+  .hero h1 em{font-style:italic;color:var(--ember);font-weight:500;}
+  .standfirst{
+    font-size:clamp(18px,2.4vw,22px);
+    line-height:1.5;
+    color:var(--ink);
+    max-width:40ch;
+    margin:26px 0 0;
+    font-weight:300;
+  }
+
+  /* ---------- signature decay strip ---------- */
+  .decay{
+    margin:48px 0 12px;
+    background:var(--raised);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:26px 28px 20px;
+  }
+  .decay .head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+  .decay .head .t{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);}
+  .decay .head .v{font-family:var(--display);font-size:15px;color:var(--petrol);font-style:italic;}
+  .decay svg{display:block;width:100%;height:auto;}
+  .decay figcaption{
+    margin-top:14px;font-size:14px;color:var(--mist);line-height:1.5;
+  }
+  .decay figcaption b{color:var(--ink);font-weight:600;}
+
+  /* ---------- abstract ---------- */
+  .abstract{
+    margin:44px 0;
+    border-left:3px solid var(--ember);
+    padding:6px 0 6px 26px;
+  }
+  .abstract .eyebrow{color:var(--ember);}
+  .abstract p{font-size:19px;line-height:1.6;margin:14px 0 0;}
+  .abstract p:first-of-type{margin-top:12px;}
+
+  /* ---------- sections ---------- */
+  section{padding:26px 0;border-top:1px solid var(--line-soft);}
+  .sec-head{display:flex;gap:18px;align-items:baseline;margin-bottom:8px;}
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--ember);font-weight:600;letter-spacing:.05em;padding-top:6px;}
+  h2{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:clamp(25px,3.6vw,34px);
+    line-height:1.12;
+    letter-spacing:-.01em;
+    color:var(--petrol-deep);
+    margin:0;
+  }
+  section p{margin:16px 0;}
+  section p.lead{font-size:18px;}
+  strong{font-weight:600;color:var(--petrol-deep);}
+  em.term{font-style:normal;font-weight:500;color:var(--ember);}
+  a{color:var(--petrol);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px;}
+
+  /* ---------- field-note vignettes ---------- */
+  .notes{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 8px;}
+  .note{
+    background:var(--raised);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:20px 20px 18px;
+  }
+  .note .tag{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ember);font-weight:600;}
+  .note h3{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.15;margin:10px 0 8px;color:var(--petrol-deep);}
+  .note p{font-size:15px;line-height:1.55;margin:0;color:var(--ink);}
+
+  /* ---------- dimensions table ---------- */
+  .dims{margin:24px 0 8px;border-top:1px solid var(--line);}
+  .dim{
+    display:grid;
+    grid-template-columns:64px 1fr;
+    gap:18px;
+    padding:18px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .dim .code{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ember);padding-top:3px;}
+  .dim .name{font-family:var(--display);font-weight:600;font-size:18px;color:var(--petrol-deep);margin:0 0 4px;}
+  .dim .desc{font-size:15px;line-height:1.55;margin:0;color:var(--ink);}
+  .dim .cover{font-family:var(--mono);font-size:12px;color:var(--mist);margin:8px 0 0;letter-spacing:.02em;}
+  .dim .cover.gap{color:var(--ember);}
+
+  /* ---------- callout ---------- */
+  .callout{
+    background:var(--petrol-deep);
+    color:#eaf1f2;
+    border-radius:3px;
+    padding:30px 30px 26px;
+    margin:30px 0;
+  }
+  .callout .eyebrow{color:var(--ember-soft);}
+  .callout p{margin:14px 0 0;font-size:18px;line-height:1.55;}
+  .callout p:first-of-type{font-family:var(--display);font-size:22px;font-weight:500;line-height:1.3;}
+  .callout strong{color:#fff;}
+
+  /* ---------- position list ---------- */
+  ol.position{counter-reset:pos;list-style:none;padding:0;margin:22px 0;}
+  ol.position li{
+    position:relative;
+    padding:0 0 22px 56px;
+    margin:0;
+  }
+  ol.position li::before{
+    counter-increment:pos;
+    content:counter(pos,upper-roman);
+    position:absolute;left:0;top:1px;
+    font-family:var(--mono);font-size:13px;font-weight:600;
+    color:var(--ember);
+    width:40px;text-align:left;
+    letter-spacing:.04em;
+  }
+  ol.position li b{font-weight:600;color:var(--petrol-deep);}
+
+  /* ---------- references ---------- */
+  .refs{font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--mist);}
+  .refs div{padding:5px 0;border-bottom:1px solid var(--line-soft);}
+  .refs span{color:var(--petrol);font-weight:500;}
+
+  footer{border-top:1px solid var(--line);padding:30px 0 70px;margin-top:24px;}
+  footer .eyebrow{color:var(--mist);}
+  footer p{font-size:14px;color:var(--mist);margin:10px 0 0;max-width:60ch;}
+
+  /* ---------- reveal motion ---------- */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease;}
+  .reveal.in{opacity:1;transform:none;}
+  .draw{stroke-dasharray:1;stroke-dashoffset:1;}
+
+  @media (max-width:680px){
+    body{font-size:16px;}
+    .notes{grid-template-columns:1fr;}
+    .sec-head{gap:12px;}
+    .dim{grid-template-columns:48px 1fr;gap:12px;}
+    ol.position li{padding-left:46px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="mark">Agentic AI &nbsp;·&nbsp; <b>Position Paper</b></div>
+    <div class="doc">Internal circulation · For discussion</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero reveal">
+    <div class="eyebrow">On evaluating agent memory</div>
+    <h1>The memory we<br>don't <em>measure</em>.</h1>
+    <p class="standfirst">Our agents forget across sessions, and the leaderboards they compete on cannot see it. We think that is a problem worth naming, and a benchmark worth owning.</p>
+  </div>
+
+  <!-- SIGNATURE: the forgetting finding -->
+  <figure class="decay reveal">
+    <div class="head">
+      <span class="t">Multi-session memory retention · observed range across frontier agents</span>
+      <span class="v">"everyone forgets, roughly equally"</span>
+    </div>
+    <svg viewBox="0 0 820 220" role="img" aria-label="Decay curve showing retention falling into a 0.32 to 0.37 band across sessions">
+      <!-- baseline grid -->
+      <line x1="60" y1="20" x2="60" y2="180" stroke="#ddd6c8" stroke-width="1"/>
+      <line x1="60" y1="180" x2="790" y2="180" stroke="#ddd6c8" stroke-width="1"/>
+      <!-- y labels -->
+      <text x="50" y="28" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">1.0</text>
+      <text x="50" y="104" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">0.5</text>
+      <text x="50" y="184" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">0.0</text>
+      <!-- the failure band 0.32-0.37 -->
+      <rect x="60" y="124.6" width="730" height="7.6" fill="#c2701f" opacity="0.14"/>
+      <line x1="60" y1="124.6" x2="790" y2="124.6" stroke="#c2701f" stroke-width="1" stroke-dasharray="3 4" opacity="0.6"/>
+      <line x1="60" y1="132.2" x2="790" y2="132.2" stroke="#c2701f" stroke-width="1" stroke-dasharray="3 4" opacity="0.6"/>
+      <text x="784" y="116" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12" fill="#c2701f" font-weight="600">0.32 – 0.37</text>
+      <!-- decay curve -->
+      <path class="draw" d="M60,30 C150,34 210,70 300,104 C390,135 470,124 560,128 C650,131 720,128 790,129"
+            fill="none" stroke="#1f4e5f" stroke-width="2.4" stroke-linecap="round"/>
+      <!-- session markers -->
+      <circle cx="60" cy="30" r="4" fill="#1f4e5f"/>
+      <circle cx="300" cy="104" r="3.5" fill="#1f4e5f"/>
+      <circle cx="560" cy="128" r="3.5" fill="#1f4e5f"/>
+      <circle cx="790" cy="129" r="4" fill="#c2701f"/>
+      <!-- x labels -->
+      <text x="60" y="200" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">session 1</text>
+      <text x="300" y="200" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">a few later</text>
+      <text x="560" y="200" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">many later</text>
+      <text x="790" y="200" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b7b80">long horizon</text>
+    </svg>
+    <figcaption>In the first test of long-horizon agent memory grounded in real multi-turn work — which happens, today, to be software engineering — <b>multi-session retention settles between roughly 0.32 and 0.37</b>, irrespective of context-window size or compression strategy. The decay is not a tuning bug. It is the current ceiling, it is shared, and there is no reason to think a harness grounded for any other domain escapes it.</figcaption>
+  </figure>
+
+  <!-- ABSTRACT -->
+  <div class="abstract reveal">
+    <div class="eyebrow">The pitch, in one breath</div>
+    <p>An agent harness — Claude Code, Codex, Cursor and their peers — is at heart a general-purpose engine. What turns one into a paralegal, an incident responder, a financial analyst or a clinician's assistant is grounding: the skills, commands, sub-agents, MCP servers, scripts and hooks that pin a generic substrate to a domain. Memory sits beneath all of it. Whatever the domain, the harness must retain what it established last session — the chosen approach, the rejected alternative, the reason — and today it largely does not.</p>
+    <p>Yet the benchmarks these harnesses compete on measure single-task resolution and say nothing about what the agent carries into tomorrow. Memory is studied prolifically, but either in conversational isolation divorced from real work, or — in the one task-grounded case we have — only for code. We propose to close the gap deliberately: adopt the mature suites for what they cover, and build the thin missing layer — a <em class="term">harness-level, domain-pluggable, task-grounded</em> memory benchmark that scores memory through real work completed across sessions in more than one domain, and that measures the dimension everyone underweights: whether the agent actually <em class="term">used</em> the memory it was given. Memory is not a feature flag. It is a cross-cutting quality attribute of the harness itself, and it deserves a scorecard.</p>
+  </div>
+
+  <!-- 1 STORY -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Monday morning, every Monday</h2></div>
+    <p class="lead">A practitioner closes a session on Friday having settled three things — a chosen approach, the reason an alternative was rejected, and a piece of work to leave alone rather than touch. On Monday she opens a fresh session and re-explains all three. The agent is bright and capable and has, between Friday and Monday, learned nothing. She might be a developer settling an architecture; she might equally be an analyst settling a methodology or a support lead settling an escalation policy. The harness underneath is the same engine, and the amnesia is identical.</p>
+    <p>It is worth being precise about why these harnesses matter as a class. They are not domain tools that happen to generalise; they are general engines that are, today, most visibly pointed at code. Ground one with the right skills, commands, sub-agents, MCP servers, scripts and hooks and it becomes a paralegal, a researcher or an operations analyst by the afternoon. That grounding is domain-specific by design. The memory beneath it is not — and it is the one layer none of those extension surfaces can supply on the harness's behalf.</p>
+    <p>This is the quiet tax on agentic development, and it is paid in the same currency every day: re-stated architecture, re-pasted context, re-discovered bugs. The industry's answer so far has been the static instruction file — CLAUDE.md, AGENTS.md, .cursorrules — a sticky note pinned to the project. These files help, but they are written by hand, they go stale, and they run out of room at a few thousand characters. A directory of sticky notes is not memory; it is a workaround for its absence.</p>
+    <p>The interesting question is not how to give an agent memory. A dozen tools and research systems now do that. The interesting question is the one nobody answers when they ship a harness: <strong>how good is its memory, measured against what?</strong></p>
+  </section>
+
+  <!-- 2 NON-FUNCTIONAL -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">02</span><h2>A non-functional concern — but only half of one</h2></div>
+    <p>It is tempting to file memory under non-functional requirements, alongside latency and uptime, and there is truth in that: memory has genuine non-functional dimensions — the tokens it costs to carry, the latency it adds to retrieval, the way it scales as the store grows, the privacy surface it opens. But the framing is only half right, and the missing half is where the value lives.</p>
+    <p>Memory also flips <strong>functional</strong> outcomes. A multi-session task — a refactor, an investigation, a long-running case — either succeeds or fails depending on whether the agent recalls the decision it made three sessions ago. The same prompt produces correct work or confident nonsense depending on what the agent remembers. Memory is therefore better understood the way we understand security or observability: a <em class="term">cross-cutting quality attribute</em> that touches every capability, cannot be reduced to a single number, and cannot be bolted on after the fact. You do not benchmark security with one score, and you should not benchmark memory with one either.</p>
+  </section>
+
+  <!-- 3 WHAT EXISTS -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">03</span><h2>What already exists — and what it misses</h2></div>
+    <p>The research community has not been idle. There is a rich and fast-growing body of memory benchmarks, and we should stand on it rather than reinvent it. The shape of the field is clear once it is laid out:</p>
+    <p><strong>The conversational suites.</strong> LoCoMo stretches dialogue across dozens of sessions and hundreds of turns; LongMemEval probes long-term interactive recall in assistant chats; MemBench separates factual from reflective memory and scores effectiveness, efficiency and capacity; MemoryAgentBench borrows from cognitive science to test retrieval, test-time learning, long-range understanding and selective forgetting. These are mature and well-designed. They are also, almost without exception, about <em class="term">talking</em> — multi-session chat, not multi-session work, and rarely grounded in any real domain at all.</p>
+    <p><strong>The one task-grounded entrant.</strong> Only recently has memory been measured inside real multi-turn agent work rather than chat — and, tellingly, the single benchmark that does so is grounded in software engineering, because that is where the harnesses were first pointed. LoCoBench-Agent turns thousands of engineering scenarios into multi-turn agent environments and reports a multi-session retention metric. Its verdict is the figure at the top of this page: retention parks itself around a third, for everyone, regardless of context-window size or compression strategy. There is no reason to expect a paralegal or an operations agent built on the same harness to fare better — and every reason, today, to expect it has simply never been checked.</p>
+    <div class="callout">
+      <div class="eyebrow">The gap, stated plainly</div>
+      <p>The leaderboards the harnesses actually compete on are memory-blind.</p>
+      <p>Whatever domain a harness is grounded into, the board it competes on rewards resolving a task in a single sitting. It does not, and was never meant to, measure what the agent carries into the next session. So memory is either tested in conversational isolation that resembles no real workflow, or left off the boards that decide which harness "wins." <strong>Nobody ranks harnesses on memory. That is the opening.</strong></p>
+    </div>
+  </section>
+
+  <!-- 4 USE CASES -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Field notes: where memory earns or loses its keep</h2></div>
+    <p>Abstractions persuade nobody. The case for measuring memory is made by the situations where its absence has a cost, or its presence a payoff — and they recur across every domain a single harness can be grounded into. A handful from the wild:</p>
+    <div class="notes">
+      <div class="note">
+        <span class="tag">Retention · legal</span>
+        <h3>The re-argued case theory</h3>
+        <p>A litigation-support agent settled the case theory and the three precedents it rests on. The next session it asks counsel to restate the theory from scratch — and quietly drops one precedent in the retelling.</p>
+      </div>
+      <div class="note">
+        <span class="tag">Conflict · support</span>
+        <h3>The ghost of the old policy</h3>
+        <p>A refund policy changed a fortnight ago. The support agent's memory still holds the old thresholds and confidently approves against them. The failure is not forgetting — it is remembering the wrong thing and never updating when the truth moved.</p>
+      </div>
+      <div class="note">
+        <span class="tag">Cost · any domain</span>
+        <h3>The context that ate the budget</h3>
+        <p>An instruction or knowledge file balloons past twenty thousand tokens. The window is half-consumed before the agent does any real work, and most of those tokens are inert. Memory that cannot be carried cheaply cannot be carried at all.</p>
+      </div>
+      <div class="note">
+        <span class="tag">Forgetting · sales</span>
+        <h3>The flag that should have aged out</h3>
+        <p>A "hold all outreach" flag from last quarter is still injected every session, long after the account reopened and asked to be contacted. Accretion without forgetting turns memory into clutter, and clutter degrades retrieval.</p>
+      </div>
+      <div class="note">
+        <span class="tag">Grounding · any domain</span>
+        <h3>The memory that was there but unused</h3>
+        <p>The right past decision was retrieved and placed in context — and the agent ignored it, producing work that contradicts it. Recall is necessary but not sufficient. Did the agent <em>act</em> on what it remembered?</p>
+      </div>
+      <div class="note">
+        <span class="tag">Privacy · health</span>
+        <h3>The detail that persisted</h3>
+        <p>A patient identifier slips into the memory store during one session and is silently surfaced in another, perhaps to a different user. A memory layer is also a data-retention surface, and evaluation must probe what it leaks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 DIMENSIONS -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">05</span><h2>The dimensions we would actually measure</h2></div>
+    <p>If memory is a cross-cutting attribute, a single accuracy number betrays it. We would score a harness across seven orthogonal dimensions — most are partly covered by existing work; the last two are where the field is thin and where we would contribute.</p>
+    <div class="dims">
+      <div class="dim">
+        <span class="code">R1</span>
+        <div><p class="name">Retention</p><p class="desc">Does a fact or decision established N sessions ago still hold? The plain question, and still largely unsolved at long horizons.</p><p class="cover">Covered · LoCoMo, LongMemEval, LoCoBench-Agent</p></div>
+      </div>
+      <div class="dim">
+        <span class="code">R2</span>
+        <div><p class="name">Retrieval precision</p><p class="desc">For the task at hand, does the agent surface the <em>right</em> memory and not a plausible neighbour? Measured as precision, recall and ranking quality.</p><p class="cover">Covered · LongMemEval, MemoryAgentBench</p></div>
+      </div>
+      <div class="dim">
+        <span class="code">R3</span>
+        <div><p class="name">Update &amp; conflict resolution</p><p class="desc">When the truth changes — a refactor, a reversed decision — does memory update and override the stale version, or persist a contradiction?</p><p class="cover">Partial · MemoryAgentBench</p></div>
+      </div>
+      <div class="dim">
+        <span class="code">R4</span>
+        <div><p class="name">Selective forgetting</p><p class="desc">Does the agent shed the obsolete and irrelevant rather than accreting forever? Forgetting is a feature, and a measurable one.</p><p class="cover">Partial · MemBench, MemoryAgentBench</p></div>
+      </div>
+      <div class="dim">
+        <span class="code">R5</span>
+        <div><p class="name">Efficiency &amp; cost</p><p class="desc">The token budget and latency the memory layer imposes per turn. A correct memory that bankrupts the context window is not a usable one.</p><p class="cover">Partial · MemBench (efficiency axis)</p></div>
+      </div>
+      <div class="dim">
+        <span class="code">R6</span>
+        <div><p class="name">Capacity degradation</p><p class="desc">How performance erodes as the store grows from a hundred to a hundred-thousand observations. The scaling curve, not a single snapshot.</p><p class="cover">Partial · MemBench (capacity axis)</p></div>
+      </div>
+      <div class="dim">
+        <span class="code">R7</span>
+        <div><p class="name">Grounding &amp; attribution</p><p class="desc">Did the agent actually <em>use</em> the memory it was given, and can the outcome be attributed to it? Recall without use is theatre. This is the frontier.</p><p class="cover gap">Gap · underweighted everywhere — our contribution</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 SHARED PROCEDURAL -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">06</span><h2>The procedure is the asset</h2></div>
+    <p class="lead">Everything so far has quietly assumed one person remembering their own context. The enterprise breaks that assumption in the most valuable way — and it is a case our benchmark should be built to capture.</p>
+    <p>When a single plugin grounds a harness for an entire organisation, the memory worth keeping is often not what any one user said. It is <em class="term">how the harness solved the problem the first time</em>, captured cleanly enough that the next user — and the thousandth — need not pay for the derivation again. Memory differs not only in what it holds (an episode, a fact, a procedure) but in whom it serves (one user, one agent, the whole organisation). The corner almost no benchmark occupies is the one that matters most here: <strong>shared, procedural, and de-identified</strong> — the canonical, personal-data-free procedure for a frequently-invoked, "fat-head" intent.</p>
+    <p>The payoff is concrete. Replay a vetted procedure and the same intent resolves faster, because the agent skips the exploration; cheaper, because it skips the re-derivation; and more deterministically, because it walks the same validated path every time. This is not caching an answer — it is caching a <em>method</em>, which is precisely why it transfers across users whose specifics differ. And it is a determinism lever in the exact sense that matters: a hot intent is lifted off free-form reasoning and set on a codified path, and the best of these procedures graduate into skills and commands. The harness's own grounding surfaces are, over time, fed by its procedural memory. Usage distils the procedure; vetting promotes it; reuse repays it — codification earned from traffic.</p>
+    <p>There is a catch, and it is the reason this needs a benchmark with a gate rather than a cache. Captured procedure is double-edged: the evidence is blunt that <em>curated</em> procedures lift agent success markedly, while <em>self-generated</em> ones accepted uncritically can degrade it by encoding wrong or over-specific heuristics. A procedure distilled from one user's lucky path can carry hidden assumptions that quietly mislead the next. So the question is not whether procedures can be reused — they can — but what a benchmark must establish before they are trusted:</p>
+    <p><strong>Transfer across users</strong> — does a procedure distilled from one user's instance still solve the next user's instance of the same intent, or did it overfit? Measured across users, not within a single trajectory. <strong>The de-identification boundary</strong> — shared procedural memory must be provably devoid of personal data yet retain enough to remain useful; catching leakage across the personal-to-shared boundary is a first-class test, not a compliance footnote. <strong>Blast radius</strong> — a stale or wrong shared procedure does not inconvenience one user, it misleads everyone who invokes that intent at once, so the benchmark must score how quickly shared memory detects its own staleness and is retired. <strong>The determinism dividend</strong> — measure the variance, cost and latency a reused procedure removes, not only the accuracy it preserves, because faster, cheaper and repeatable is the entire point.</p>
+  </section>
+
+  <!-- 7 POSITION -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Our position</h2></div>
+    <p class="lead">We do not need another conversational memory benchmark. We need to measure memory where real work happens — in whatever domain the harness has been grounded into — and to measure the part everyone skips. Concretely:</p>
+    <ol class="position">
+      <li><b>Adopt, do not rebuild.</b> The conversational suites already cover retention, retrieval and forgetting competently. We harness against them rather than duplicating them, and we cite their findings rather than re-deriving them.</li>
+      <li><b>Build the thin missing layer: a harness-level, domain-pluggable, task-grounded benchmark.</b> Memory should be scored through real multi-session work — a matter opened in one session and closed in another, a decision made early and tested late — not through chat question-answering. Crucially, we instantiate the same harness into several domains using the very surfaces that ground it — skills, commands, sub-agents, MCP servers, scripts, hooks — and measure memory across all of them, because memory is a property of the harness and must hold whatever it has been grounded to do. LoCoBench-Agent is the closest seed; we generalise its spirit beyond code to whole-workflow continuity across domains.</li>
+      <li><b>Treat shared procedural memory as a first-class, gated mode.</b> Where a plugin grounds a harness for an entire organisation, the canonical de-identified procedure for a fat-head intent is an asset worth measuring on its own terms — transfer across users, a provable personal-data boundary, and the variance, cost and latency it removes. And it is gated: the evidence is plain that curated procedures help and uncurated ones can hurt, so we score reuse with a vetting step, not without one.</li>
+      <li><b>Make grounding and attribution first-class.</b> The dimension the field underweights (R7) is precisely the one that matters to a practitioner: not "was the right memory retrievable" but "did the agent use it and was the result better for it." We instrument for causal attribution, not just recall.</li>
+      <li><b>Publish a scorecard, not a number.</b> Because memory is a cross-cutting quality attribute, we report a profile across the seven dimensions and surface it as a distinct axis alongside task-resolution leaderboards — so a harness can be strong on resolution and visibly weak on memory, and the difference is legible.</li>
+      <li><b>Insist on reproducibility.</b> Memory layers are stateful and non-deterministic; the corpus must be sandbox-reproducible and the protocol must pin the seeds, the store contents and the injection policy, or the leaderboard means nothing.</li>
+    </ol>
+  </section>
+
+  <!-- 7 RISKS -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">08</span><h2>What could go wrong</h2></div>
+    <p>A position is only honest if it names its own failure modes. Five are worth holding in view. <strong>Goodharting</strong> — optimise hard for recall@k and watch forgetting and cost regress; the scorecard exists partly to make this trade-off visible rather than hide it. <strong>Contamination</strong> — shared memory stores leak across agents and across evaluation runs, inflating scores; isolation must be part of the protocol. <strong>Reproducibility drift</strong> — a stateful, non-deterministic memory layer is hostile to clean measurement, and a sloppy harness will produce numbers nobody can reproduce. <strong>Privacy as an afterthought</strong> — if the benchmark never probes what the memory store retains and surfaces, it certifies a capability while ignoring its most serious liability. <strong>Blast radius</strong> — once a procedure is shared across an organisation, a poisoned or stale one misleads everyone who invokes that intent rather than one user, so the leverage that makes shared procedural memory valuable is precisely what makes its failures organisation-wide.</p>
+    <p>None of these is disqualifying. All of them are reasons the benchmark should be designed by people who take memory seriously as infrastructure — which is the argument for owning it rather than waiting for it.</p>
+  </section>
+
+  <!-- REFERENCES -->
+  <section class="reveal">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Reading list</h2></div>
+    <p>A curated entry point into the memory-benchmark landscape, ordered roughly from conversational to agentic to coding-grounded.</p>
+    <div class="refs">
+      <div><span>LoCoMo</span> — Evaluating Very Long-Term Conversational Memory of LLM Agents · arXiv:2402.17753</div>
+      <div><span>LongMemEval</span> — Benchmarking Chat Assistants on Long-Term Interactive Memory · arXiv:2410.10813</div>
+      <div><span>MemBench</span> — Towards More Comprehensive Evaluation on the Memory of LLM-based Agents · arXiv:2506.21605</div>
+      <div><span>MemoryAgentBench</span> — Evaluating Memory in LLM Agents via Incremental Multi-Turn Interactions · arXiv:2507.05257</div>
+      <div><span>MemoryBench</span> — A Benchmark for Memory and Continual Learning in LLM Systems · arXiv:2510.17281</div>
+      <div><span>LifelongAgentBench</span> — Evaluating LLM Agents as Lifelong Learners · arXiv:2505.11942</div>
+      <div><span>LoCoBench-Agent</span> — An Interactive Benchmark for LLM Agents in Long-Context Software Engineering · arXiv:2511.13998</div>
+      <div><span>ProcMEM</span> — Learning Reusable Procedural Memory from Experience for LLM Agents · arXiv:2602.01869</div>
+      <div><span>LEGOMem</span> — Modular Procedural Memory for Multi-Agent Systems for Workflow Automation · arXiv:2510.04851</div>
+      <div><span>MIRIX</span> — Multi-Agent Memory System with a dedicated procedural memory type · arXiv:2507.07957</div>
+      <div><span>SoK: Agentic Skills</span> — skills as procedural memory; curated vs self-generated reuse (SkillsBench) · arXiv:2602.20867</div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="eyebrow">Position paper · for discussion and circulation</div>
+    <p>Prepared as a point of view on whether — and how — we evaluate agent memory. Intended to provoke a decision: adopt the field's conversational suites, build the harness-level, domain-pluggable, task-grounded layer, and own the grounding dimension nobody else is measuring.</p>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // Draw the decay curve on load
+  const path = document.querySelector('.decay .draw');
+  if(path && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+    path.getBoundingClientRect();
+    path.style.transition = 'stroke-dashoffset 1.6s ease 0.3s';
+    requestAnimationFrame(()=>{ path.style.strokeDashoffset = '0'; });
+  } else if(path){
+    path.style.strokeDasharray = 'none';
+  }
+</script>
+
+</body>
+</html>
