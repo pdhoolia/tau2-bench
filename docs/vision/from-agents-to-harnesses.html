@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>From Agents to Harnesses — Domain-Specific Harnessing of the LLM OS</title>
+<style>
+  :root {
+    --ink: #1a1714;
+    --muted: #6b625a;
+    --faint: #938a82;
+    --paper: #faf7f2;
+    --card: #ffffff;
+    --line: #e7e0d6;
+    --accent: #b5512b;       /* terracotta */
+    --accent-soft: #f3e2d8;
+    --green: #3f6f4e;
+    --green-soft: #e3efe5;
+    --blue: #355a7a;
+    --blue-soft: #e1eaf1;
+    --code-bg: #2b2622;
+    --code-ink: #f3ece2;
+    --maxw: 760px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 18px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Hero ---------- */
+  header.hero {
+    background:
+      radial-gradient(1200px 400px at 80% -10%, var(--accent-soft), transparent 60%),
+      radial-gradient(900px 360px at -10% 10%, var(--blue-soft), transparent 55%);
+    border-bottom: 1px solid var(--line);
+    padding: 72px 0 52px;
+  }
+  .eyebrow {
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 12.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 44px;
+    line-height: 1.12;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 21px;
+    color: var(--muted);
+    margin: 0 0 26px;
+    max-width: 42ch;
+  }
+  .byline {
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 13.5px;
+    color: var(--faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+  }
+  .byline .tag {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+
+  /* ---------- Sections ---------- */
+  main { padding: 8px 0 72px; }
+  section { padding: 38px 0; border-bottom: 1px solid var(--line); }
+  section:last-child { border-bottom: none; }
+  h2 {
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  h2 .num {
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    display: block;
+    margin-bottom: 8px;
+  }
+  h3 { font-size: 20px; margin: 28px 0 4px; }
+  p { margin: 14px 0; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  a:hover { border-bottom-color: var(--accent); }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+
+  /* ---------- Abstract card ---------- */
+  .abstract {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 14px;
+    padding: 26px 28px;
+    margin: 30px 0 6px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 12px 30px -22px rgba(0,0,0,0.25);
+  }
+  .abstract .label {
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .abstract p { font-size: 18.5px; }
+  .abstract p:first-of-type { margin-top: 6px; }
+
+  /* ---------- Pull quote ---------- */
+  blockquote {
+    margin: 26px 0;
+    padding: 4px 0 4px 22px;
+    border-left: 3px solid var(--accent);
+    color: var(--ink);
+    font-size: 21px;
+    line-height: 1.45;
+    font-style: italic;
+  }
+  blockquote cite {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+    font-style: normal;
+    color: var(--faint);
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+  }
+
+  /* ---------- Policy snippet ---------- */
+  .policy {
+    background: #fff8f3;
+    border: 1px solid var(--accent-soft);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 22px 0;
+    font-size: 16px;
+  }
+  .policy .src {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .policy ul { margin: 6px 0; padding-left: 20px; }
+  .policy li { margin: 4px 0; }
+
+  /* ---------- Code ---------- */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 12px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.55;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    margin: 22px 0;
+  }
+  pre .c { color: #9aa7a0; }   /* comment */
+  pre .k { color: #e6a673; }   /* keyword */
+  pre .s { color: #a7c7a0; }   /* string  */
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: #efe8de;
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  /* ---------- Spectrum diagram ---------- */
+  .spectrum {
+    margin: 28px 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .spectrum .bar {
+    height: 12px;
+    background: linear-gradient(90deg, #c98a5f 0%, #d8b08c 25%, #9fb6a3 55%, #5a8aa8 100%);
+  }
+  .spectrum .cols { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .spectrum .col { padding: 16px 16px 20px; border-right: 1px solid var(--line); }
+  .spectrum .col:last-child { border-right: none; }
+  .spectrum .col h4 {
+    margin: 0 0 6px;
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .spectrum .col .prim {
+    font-family: ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .spectrum .col p { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+  /* ---------- Mapping table ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 15px;
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+  }
+  th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 700;
+  }
+  td.prim { font-family: ui-monospace, monospace; font-size: 13px; color: var(--accent); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ---------- Callout chips ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+  .chip {
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    font-size: 13px;
+    border-radius: 999px;
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    background: var(--card);
+  }
+  .chip.g { background: var(--green-soft); border-color: #cfe3d2; color: var(--green); }
+  .chip.b { background: var(--blue-soft); border-color: #cfdce8; color: var(--blue); }
+
+  /* ---------- Loop diagram ---------- */
+  .loop {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 26px 0;
+  }
+  .loop .node {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    font-size: 13.5px;
+    position: relative;
+  }
+  .loop .node .n {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .loop .node strong { display: block; font-size: 14.5px; margin-bottom: 3px; }
+  .loop .node span { color: var(--muted); }
+  .loop .node::after {
+    content: "\2192";
+    position: absolute;
+    right: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--faint);
+    font-size: 16px;
+  }
+  .loop .node:last-child::after { content: "\21BA"; right: -6px; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    padding: 40px 0 64px;
+    color: var(--faint);
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    font-size: 13.5px;
+  }
+  footer a { color: var(--faint); border-bottom-color: var(--line); }
+
+  .lede { font-size: 20px; color: var(--ink); }
+
+  @media (max-width: 680px) {
+    h1 { font-size: 34px; }
+    .spectrum .cols { grid-template-columns: 1fr 1fr; }
+    .spectrum .col:nth-child(2) { border-right: none; }
+    .loop { grid-template-columns: 1fr 1fr; }
+    .loop .node:nth-child(2)::after { content: "\2193"; right: 50%; top: auto; bottom: -16px; transform: translateX(50%); }
+    .loop .node:nth-child(4)::after { content: ""; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Position Paper · Determinism Spectrum, Part II</div>
+    <h1>From Agents to Harnesses</h1>
+    <p class="dek">Domain expertise should not be compiled into a monolith of prose. It should be <em>harnessed</em> — disclosed progressively, governed deterministically, and allowed to evolve.</p>
+    <div class="byline">
+      <span class="tag">τ²-bench &middot; airline · retail · telecom</span>
+      <span class="tag">Claude Code plugins</span>
+      <span class="tag">Sequel to “Gradual Determinism”</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ABSTRACT -->
+  <section id="abstract">
+    <div class="abstract">
+      <div class="label">The elevator pitch</div>
+      <p>Today's benchmark agents are <strong>legacy artifacts</strong>: a single LLM call, handed a flat wall of policy prose, asked to re-derive every rule from working memory on every turn. We propose the opposite. Treat each domain as a <strong>domain-specific harness</strong> over a capable agent runtime — Claude Code — packaged as a <strong>plugin</strong> of skills, scripts, sub-agents, MCP connectors, slash-commands, and deterministic hooks.</p>
+      <p>The thesis is simple and testable: <strong>policy placed at the right altitude beats policy crammed into one prompt.</strong> Soft judgment stays as natural-language skill; arithmetic becomes a script; hard invariants become hooks the agent <em>cannot</em> violate. We will measure this directly on τ²-bench pass-rate. And because the harness is observable, it sets up the longer game — agents that <strong>introspect their own failures and evolve their own harness.</strong></p>
+    </div>
+  </section>
+
+  <!-- THE TURN -->
+  <section id="turn">
+    <h2><span class="num">01 · The turn</span>The software is not the code. It's the harness.</h2>
+    <p class="lede">We have spent a while now building inside premier agent-harnesses — Claude Code, Codex, Cursor — and a conviction has hardened: the future of domain software is not legacy static code, and not free-form “vibe” code either. It is the <em>harnessing</em> of an LLM operating system for a domain, through natural-language procedures, rules, parallelization hints, and scripts that the agent composes on demand.</p>
+    <p>Anthropic's emerging standards make this concrete. <strong>Agent Skills</strong>, and their packaging into <strong>plugins</strong> — skills, slash-commands, sub-agents, scripts, MCP connectors, and deterministic hooks bundled together — let us harness the harness itself: a higher-order, domain-specific configuration of a general agent.</p>
+    <p>In <a href="https://claude.ai/public/artifacts/f0f10971-0633-49c7-b408-714c9899a98b">Gradual Determinism</a> we argued for governing a <em>spectrum</em> — from soft, judgment-laden natural language to hard, mechanically-enforced invariants — and for moving rules along it deliberately rather than all-or-nothing. This piece is the applied sequel. τ²-bench gives us a laboratory with a scoreboard: three customer-service domains, real policies, real tools, and an evaluator that grades the trajectory. We will rebuild its agents as harnesses, and let the numbers speak.</p>
+  </section>
+
+  <!-- ANECDOTE -->
+  <section id="anecdote">
+    <h2><span class="num">02 · The motivating anecdote</span>“The API does not check this for the agent.”</h2>
+    <p>Open the airline domain's policy and a confession appears — not once, but three times, verbatim:</p>
+    <blockquote>
+      “The API does not check that cancellation rules are met, so the agent must make sure the rules apply before calling the API!”
+      <cite>data/tau2/domains/airline/policy.md</cite>
+    </blockquote>
+    <p>The policy is a microcosm of the whole problem. Inside its 166 lines live four <em>different kinds</em> of rule, each demanding a different treatment:</p>
+    <div class="policy">
+      <div class="src">airline/policy.md — four kinds of rule, one flat prompt</div>
+      <ul>
+        <li><strong>Soft judgment.</strong> “Be helpful… deny requests against this policy… do not give subjective recommendations.”</li>
+        <li><strong>Exact arithmetic.</strong> Compensation is “<strong>$100 times the number of passengers</strong>” for cancellations, “$50 times” for delays. Baggage allowance is a 3×3 table of membership × cabin.</li>
+        <li><strong>Eligibility predicates.</strong> Cancel only if booked &lt;24h ago <em>or</em> airline-cancelled <em>or</em> business <em>or</em> insured-and-covered. Compensate only if silver/gold <em>or</em> insured <em>or</em> business.</li>
+        <li><strong>Hard invariants.</strong> “Basic economy flights cannot be modified.” “Cabin cannot be changed if any flight has already been flown.” The number of passengers cannot change — <em>“even a human agent cannot.”</em></li>
+      </ul>
+    </div>
+    <p>Now look at what the legacy agent actually does with all of it. The entire policy is interpolated into a single system prompt, once, and the model is told to be careful:</p>
+<pre><span class="c"># src/tau2/agent/llm_agent.py</span>
+SYSTEM_PROMPT = <span class="s">"""
+&lt;instructions&gt;{agent_instruction}&lt;/instructions&gt;
+&lt;policy&gt;{domain_policy}&lt;/policy&gt;
+"""</span>
+
+<span class="c"># every turn: system_prompt + history -&gt; one generate() call.</span>
+<span class="c"># the model must re-derive the $100-vs-$50 matrix, the 24h window,</span>
+<span class="c"># and "basic economy cannot be modified" from memory, each time.</span></pre>
+    <p>This is the determinism spectrum collapsed to a single point. An exact formula, a hard invariant, and a matter of taste are all rendered as the same medium — prose — and enforced by the same mechanism — the model's hope of remembering. The policy's own three-times-repeated plea is the tell: the author <em>knew</em> a guardrail was missing and could only ask the model, in English, to please supply it.</p>
+    <blockquote>A rule that the system “must make sure of” but never checks is not a rule. It is a wish.</blockquote>
+  </section>
+
+  <!-- THE MAPPING -->
+  <section id="mapping">
+    <h2><span class="num">03 · The reframe</span>One policy, four altitudes, five primitives.</h2>
+    <p>A harness lets each rule live where it belongs on the determinism spectrum. We stop asking one prompt to be judge, calculator, and bouncer all at once, and instead route each concern to the plugin primitive built for it.</p>
+
+    <div class="spectrum">
+      <div class="bar"></div>
+      <div class="cols">
+        <div class="col">
+          <h4>Soft judgment</h4>
+          <div class="prim">skill · sub-agent</div>
+          <p>Tone, helpfulness, scope refusal, confirmation etiquette. Stays natural language — disclosed only when relevant.</p>
+        </div>
+        <div class="col">
+          <h4>Procedure</h4>
+          <div class="prim">command · skill</div>
+          <p>“Book a flight,” “cancel,” “modify cabin.” Named entry points that load just the steps for the task at hand.</p>
+        </div>
+        <div class="col">
+          <h4>Computation</h4>
+          <div class="prim">script</div>
+          <p>Baggage tables, refund deltas, the $100×N / $50×N formulas. Deterministic code, not token-by-token arithmetic.</p>
+        </div>
+        <div class="col">
+          <h4>Invariant</h4>
+          <div class="prim">hook</div>
+          <p>“No modifying basic economy.” “No cancelling a flown segment.” Enforced before the tool call — refusable, not hopeful.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>Concretely, here is how one domain's policy decomposes into one Claude Code plugin:</p>
+    <table>
+      <thead><tr><th>Plugin primitive</th><th>Carries…</th><th>Airline example</th></tr></thead>
+      <tbody>
+        <tr><td class="prim">skill</td><td>Progressive-disclosure procedures — loaded only when the conversation needs them.</td><td><code>book-flight</code>, <code>cancel-flight</code>, <code>compensation</code>, each a focused SKILL.md instead of 166 flat lines.</td></tr>
+        <tr><td class="prim">command</td><td>Operator-facing entry points.</td><td><code>/cancel</code>, <code>/modify-cabin</code> — route to the right skill with the right context.</td></tr>
+        <tr><td class="prim">script</td><td>Deterministic computation; removes arithmetic from the token stream.</td><td><code>baggage_allowance.py</code>, <code>refund_delta.py</code>, <code>comp_amount.py</code>. (τ²'s own <code>calculate</code> tool exists <em>because</em> models are weak at this — a script retires the need.)</td></tr>
+        <tr><td class="prim">sub-agent</td><td>Isolated specialist reasoning with its own context window.</td><td>A <code>policy-auditor</code> that re-checks a proposed write against the rulebook before the user confirms.</td></tr>
+        <tr><td class="prim">hook</td><td>Deterministic guardrails on tool I/O.</td><td><strong>PreToolUse</strong> blocks <code>cancel_reservation</code> unless the eligibility predicate passes — closing the exact gap the policy three times begged the model to close.</td></tr>
+        <tr><td class="prim">MCP</td><td>The domain tools themselves, as a connector.</td><td><em>Already built in this fork</em> — <code>tau2.mcp.unified_server</code> exposes airline/retail/telecom tools over MCP. The plugin's hands exist; we are giving them a brain and a conscience.</td></tr>
+      </tbody>
+    </table>
+
+    <p>The hook is the heart of it. The legacy agent's failure mode is to confidently call <code>cancel_reservation</code> on an ineligible booking. A pre-tool hook turns the policy's plea into mechanism:</p>
+<pre><span class="c"># hooks/precheck_cancel.py — PreToolUse on cancel_reservation</span>
+<span class="k">def</span> precheck(tool_call):
+    r = get_reservation(tool_call.args[<span class="s">"reservation_id"</span>])
+    <span class="k">if</span> any_segment_flown(r):
+        <span class="k">return</span> deny(<span class="s">"flown segment — transfer required"</span>)
+    <span class="k">if</span> not (booked_within_24h(r) <span class="k">or</span> r.airline_cancelled
+            <span class="k">or</span> r.cabin == <span class="s">"business"</span> <span class="k">or</span> insured_and_covered(r)):
+        <span class="k">return</span> deny(<span class="s">"cancellation rules not met"</span>)
+    <span class="k">return</span> allow()   <span class="c"># now the API call is safe by construction</span></pre>
+  </section>
+
+  <!-- WHY IT SHOULD WIN -->
+  <section id="why">
+    <h2><span class="num">04 · The wager</span>Why a harness should out-score a prompt.</h2>
+    <p>τ²-bench does not grade vibes. Its evaluator scores each trajectory against the task's <code>evaluation_criteria</code> — did the correct tool actions fire, did the database end in the right state, was the policy honored. That makes our claim falsifiable, and we intend to report it as a pass-rate delta, head-to-head, same models, same tasks. Four mechanisms should move that number:</p>
+    <div class="chips">
+      <span class="chip g">↓ Working-memory load</span>
+      <span class="chip g">↓ Arithmetic errors</span>
+      <span class="chip g">↓ Invariant violations</span>
+      <span class="chip b">↑ Auditability</span>
+    </div>
+    <p><strong>Less to hold at once.</strong> Progressive disclosure means the model reasons over the <em>cancellation</em> procedure during a cancellation — not the booking, baggage, and insurance rules simultaneously. Smaller live context, fewer cross-contaminated mistakes.</p>
+    <p><strong>Arithmetic leaves the token stream.</strong> A $50-vs-$100 confusion, a botched refund delta, an off-by-one baggage allowance — these are scored as failures today. A script cannot make them.</p>
+    <p><strong>Invariants become unviolatable.</strong> The single most damaging failure — executing a write the policy forbids — is intercepted by a hook before it reaches the tool. The model no longer has to <em>remember</em> not to; it <em>cannot</em>.</p>
+    <p>We are deliberately not promising a number in advance. The honest framing is that this is a <em>wager with a scoreboard</em>: if the harness does not beat the monolith on pass-rate, the thesis is wrong and we will say so. We believe it will — and that the margin grows on exactly the hard, conditional, arithmetic-laden tasks where flat prompting is weakest.</p>
+  </section>
+
+  <!-- EVOLUTION -->
+  <section id="evolution">
+    <h2><span class="num">05 · The longer game</span>Harnesses that watch themselves, and evolve.</h2>
+    <p>A harness is not just more accurate — it is <strong>observable</strong>. Every skill that loads, every script that computes, every hook that allows or denies is a structured event. We weave that observability in from the start, then close the loop. τ² already supplies the other half: a verdict on every run.</p>
+
+    <div class="loop">
+      <div class="node"><span class="n">RUN</span><strong>Benchmark</strong><span>τ² scores the trajectory against criteria.</span></div>
+      <div class="node"><span class="n">OBSERVE</span><strong>Trace</strong><span>Hook decisions, skill loads, tool calls — captured.</span></div>
+      <div class="node"><span class="n">INTROSPECT</span><strong>Diagnose</strong><span>Which skill was thin? Which invariant unguarded?</span></div>
+      <div class="node"><span class="n">EVOLVE</span><strong>Patch harness</strong><span>Add the hook, sharpen the skill, re-run.</span></div>
+    </div>
+
+    <p>This is where the gradual-determinism thesis pays its dividend. When a class of failures recurs, the fix is not to re-roll a giant prompt and pray — it is a <em>localized, legible</em> edit at a known altitude: a new precondition in one hook, a clarified step in one skill, a corrected constant in one script. The harness becomes a living document of hard-won domain knowledge, and the agent itself can propose the patch, justify it from the trace, and validate it against the scoreboard before the change lands.</p>
+    <p>That is the destination: <strong>domain-specific harnesses that author and refine themselves</strong>, with determinism added exactly where evidence demands it — no sooner, no later. Self-improving software whose improvements are auditable, reversible, and grounded in measured outcomes rather than vibes.</p>
+  </section>
+
+  <!-- CLOSE -->
+  <section id="close">
+    <h2><span class="num">06 · What we are building</span>The plan, in one breath.</h2>
+    <p>For each τ²-bench domain — airline, retail, telecom — we ship one Claude Code plugin: skills that decompose the policy by altitude, scripts that own the arithmetic, sub-agents for isolated audit, the fork's existing MCP servers as the tool connector, slash-commands as entry points, and hooks that make the “must make sure” clauses true by construction. Then we run it against the legacy <code>LLMAgent</code>, same models, same tasks, and we report the pass-rate delta plainly. Then we instrument it, and we let it begin to improve itself.</p>
+    <blockquote>We are not writing better agents. We are building the harness in which a capable agent becomes a domain expert — and then learns.</blockquote>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <p>Part II of an ongoing series on the determinism spectrum. Part I — <a href="https://claude.ai/public/artifacts/f0f10971-0633-49c7-b408-714c9899a98b">Gradual Determinism &amp; the Governance of the Determinism Spectrum</a>.</p>
+  <p>Built on <a href="https://taubench.com">τ²-bench</a> (Sierra) · this fork adds the MCP server layer under <code>src/tau2/mcp/</code> · plugins target the Claude Code agent runtime.</p>
+</footer>
+
+</body>
+</html>
