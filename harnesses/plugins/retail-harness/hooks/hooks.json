@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__tau2-retail__cancel_pending_order|mcp__tau2-retail__modify_pending_order_items|mcp__tau2-retail__modify_pending_order_address|mcp__tau2-retail__modify_pending_order_payment|mcp__tau2-retail__exchange_delivered_order_items|mcp__tau2-retail__return_delivered_order_items|mcp__tau2-retail__modify_user_address",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/precheck_write.py\"",
+            "statusMessage": "Verifying retail write against policy invariants"
+          }
+        ]
+      }
+    ]
+  }
+}
