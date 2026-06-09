@@ -13,6 +13,7 @@ uv sync                        # core only (airline, retail, telecom, mock)
 uv sync --extra voice          # + voice/audio-native features
 uv sync --extra knowledge      # + banking_knowledge domain (retrieval pipeline)
 uv sync --extra gym            # + gymnasium RL interface
+uv sync --extra mcp            # + FastMCP servers exposing domain tools over MCP
 uv sync --extra dev            # + pytest, ruff, pre-commit (required for committing)
 uv sync --extra experiments    # + plotting libs for src/experiments/
 uv sync --all-extras           # everything
@@ -61,6 +62,25 @@ tau2 run --domain banking_knowledge --retrieval-config qwen_embeddings --agent-l
 
 Results go to `data/simulations/`. Use `tau2 view` to browse them.
 
+## MCP Servers
+
+`src/tau2/mcp/` wraps the airline, retail, and telecom domain tools as [FastMCP](https://github.com/jlowin/fastmcp) servers so external MCP-compatible agents can call them directly (outside the `tau2 run` simulation loop). Requires `uv sync --extra mcp`. Full tool inventory, config snippets, and programmatic API: `src/tau2/mcp/README.md`.
+
+```bash
+# Unified HTTP server — all domains on one port, different paths (recommended)
+python -m tau2.mcp.unified_server --port 8000
+#   → http://localhost:8000/mcp/{airline,retail,telecom}   (+ /info)
+
+# Single domain — stdio (default) or HTTP
+python -m tau2.mcp --domain airline
+python -m tau2.mcp --domain retail --transport http --port 8001
+```
+
+- `unified_server.py` mounts the three per-domain servers under one HTTP port (one tunnel/container for all domains).
+- `airline_server.py`, `retail_server.py`, `telecom_server.py` each expose a `create_<domain>_mcp_server(db_path=...)` factory; pass `--db-path` to point at a custom DB.
+- DBs load at startup; write operations mutate **in-memory** state only and do not persist to disk by default.
+- Business-logic errors are returned as `{"error": "..."}` structured responses rather than raised exceptions.
+
 ## Architecture
 
 ```
@@ -75,6 +95,7 @@ src/tau2/
 ├── evaluator/       # Task evaluation logic
 ├── gym/             # Gymnasium-compatible RL interface
 ├── knowledge/       # Knowledge retrieval pipeline (embedders, retrievers, postprocessors, sandbox)
+├── mcp/             # FastMCP servers wrapping domain tools (airline/retail/telecom) for external MCP agents
 ├── metrics/         # Metrics computation
 ├── orchestrator/    # Simulation orchestrators (half-duplex, full-duplex)
 ├── registry.py      # Global registry for agents, domains, tasks, users
