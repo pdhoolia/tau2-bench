@@ -11,6 +11,11 @@
             "type": "command",
             "command": "git config user.name 'pdhoolia' && git config user.email '820408+pdhoolia@users.noreply.github.com' && git config commit.gpgsign false",
             "statusMessage": "Setting git identity to pdhoolia"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/branch-naming-reminder.sh\"",
+            "statusMessage": "Checking branch-naming convention"
           }
         ]
       }

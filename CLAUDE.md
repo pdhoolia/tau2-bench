@@ -37,6 +37,7 @@ This fork adds [src/tau2/mcp/](src/tau2/mcp/) — FastMCP servers that wrap the 
 ## Conventions
 
 - **Branch naming:** name branches `<git-username>/<short-kebab-description>`, where `<git-username>` is the committing user's own GitHub handle — derive it from the active git identity (e.g. the `…+<handle>@users.noreply.github.com` email, or `git config user.name`), not a hardcoded name. Examples: `pdhoolia/airline-plugin`, `esxr/retail-fix`. Never create `claude/*` branches.
+  - **Precedence over the harness branch:** if a session harness assigns a `claude/*` working branch by default, **this convention wins**. You have explicit permission to leave that branch: rename it (`git branch -m <git-username>/<short-kebab-description>`) before committing and push the renamed branch — do not commit to or push `claude/*`. A SessionStart hook (`.claude/hooks/branch-naming-reminder.sh`, wired in `.claude/settings.json`) surfaces this reminder every session so the rule is present even before this file is read.
 
 ## Watch out for
 

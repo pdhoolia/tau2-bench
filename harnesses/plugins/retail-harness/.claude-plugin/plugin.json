@@ -1,0 +1,11 @@
+{
+  "name": "retail-harness",
+  "displayName": "Retail Harness (tau2-bench)",
+  "version": "0.1.0",
+  "description": "Higher-order harness for the tau2-bench retail domain. Decomposes retail/policy.md by altitude: procedures become progressively-disclosed skills, price arithmetic becomes a deterministic script, the 'confirm before write' and eligibility invariants become a PreToolUse hook the agent cannot route around, and a policy-auditor sub-agent re-checks proposed writes. The domain tools are supplied by the fork's existing retail MCP server.",
+  "author": {
+    "name": "pdhoolia",
+    "email": "pdhoolia@gmail.com"
+  },
+  "keywords": ["tau2-bench", "retail", "determinism", "harness"]
+}

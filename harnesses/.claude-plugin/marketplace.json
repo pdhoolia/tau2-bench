@@ -1,0 +1,18 @@
+{
+  "name": "tau2-harnesses",
+  "owner": {
+    "name": "pdhoolia",
+    "email": "pdhoolia@gmail.com"
+  },
+  "description": "Higher-order harnesses (Claude Code plugins) for the tau2-bench customer-service domains. Each plugin governs a domain's determinism spectrum: soft judgment as skills, arithmetic as scripts, hard invariants as deterministic hooks, over the existing tau2 MCP tool connectors.",
+  "plugins": [
+    {
+      "name": "retail-harness",
+      "source": "./plugins/retail-harness",
+      "description": "Domain-specific harness for the tau2-bench retail domain: per-procedure skills, a deterministic price-delta script, a pre-write guardrail hook, a policy-auditor sub-agent, and the retail MCP tool connector.",
+      "version": "0.1.0",
+      "category": "benchmark",
+      "keywords": ["tau2-bench", "retail", "determinism", "harness", "customer-service"]
+    }
+  ]
+}
