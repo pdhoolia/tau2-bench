@@ -34,6 +34,10 @@ A domain (`src/tau2/domains/<name>/`) = `data_model.py` (DB subclass) + `tools.p
 
 This fork adds [src/tau2/mcp/](src/tau2/mcp/) — FastMCP servers that wrap the airline/retail/telecom domain tools so external MCP-compatible agents can call them (requires `uv sync --extra mcp`). The quickest start is the unified server, `python -m tau2.mcp.unified_server --port 8000`. See [AGENTS.md](AGENTS.md#mcp-servers) for the run modes and behavior notes, and [src/tau2/mcp/README.md](src/tau2/mcp/README.md) for the full tool inventory and config snippets.
 
+## Conventions
+
+- **Branch naming:** name branches `<git-username>/<short-kebab-description>`, where `<git-username>` is the committing user's own GitHub handle — derive it from the active git identity (e.g. the `…+<handle>@users.noreply.github.com` email, or `git config user.name`), not a hardcoded name. Examples: `pdhoolia/airline-plugin`, `esxr/retail-fix`. Never create `claude/*` branches.
+
 ## Watch out for
 
 - `make check-all` must pass before committing (pre-commit hook runs it). Ruff, line length 88, rules `E4 E7 E9 F I` (ignoring `E501 F541`); notebooks excluded.
