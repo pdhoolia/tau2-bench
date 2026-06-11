@@ -14,16 +14,18 @@ around* — over the fork's existing [MCP tool servers](../src/tau2/mcp/).
 
 Incremental build. This first increment ships the marketplace plus **one** plugin:
 
-| Plugin           | Domain  | State                                                        |
+| Plugin           | Domain  | State                                                       |
 | ---------------- | ------- | ----------------------------------------------------------- |
 | `retail-harness` | retail  | Scaffold complete — skills, script, hook, sub-agent, MCP.   |
 | _airline_        | airline | Planned.                                                    |
 | _telecom_        | telecom | Planned.                                                    |
 
 The tau2 evaluation bridge (an `--agent claude_harness` wrapper that drives
-`claude -p` and reconciles MCP tool calls back into the tau2 trajectory) is the
-**next** increment and is not included here. See the retail plugin's README for the
-boundary between what runs today and what the bridge will add.
+`claude -p` and reconciles MCP tool calls back into the tau2 trajectory) is now
+included — see [`src/tau2/agent/claude_harness/`](../src/tau2/agent/claude_harness).
+To run an evaluation of a harness plugin (and its baseline) end-to-end, follow the
+**[evaluation playbook](playbook.md)** — preflight, smoke run, full run, and the
+`run_eval.sh` shortcut, with all models routed through a LiteLLM gateway.
 
 ## Layout
 

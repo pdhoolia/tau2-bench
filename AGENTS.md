@@ -29,6 +29,43 @@ Required keys depend on the task:
 - `ELEVENLABS_API_KEY` — voice synthesis
 - `DEEPGRAM_API_KEY` — voice transcription
 
+### LiteLLM gateway (route every model through a corporate/self-hosted proxy)
+
+When your models are only reachable via a LiteLLM proxy (no direct provider keys),
+there are **three LLM consumers** and they reach the gateway in **two dialects**:
+
+| Consumer | Call path | Gateway endpoint | Model-name format |
+| --- | --- | --- | --- |
+| Agent + user simulator | LiteLLM SDK `completion()` | `/v1/chat/completions` | `litellm_proxy/<public-name>` |
+| `claude_harness` | `claude -p` CLI subprocess | `/v1/messages` (**Anthropic**) | `<public-name>` (bare) |
+| Evaluator (NL-assertions + auth classifier) | LiteLLM SDK `completion()` | `/v1/chat/completions` | `litellm_proxy/<public-name>` |
+
+Set it up in `.env` (see `.env.example` for the copy-paste block). Keep the secret +
+base URL once and re-export them under the names each consumer reads:
+
+- SDK path reads `LITELLM_PROXY_API_BASE` / `LITELLM_PROXY_API_KEY`.
+- `claude` CLI reads `ANTHROPIC_BASE_URL` (no `/v1`) / `ANTHROPIC_AUTH_TOKEN`, plus
+  `ANTHROPIC_SMALL_FAST_MODEL` for its background calls. It inherits these from the
+  loaded `.env` because the subprocess inherits `os.environ`.
+- The evaluator/judge models are **hardcoded** (no CLI flag); override via
+  `TAU2_LLM_NL_ASSERTIONS`, `TAU2_LLM_ENV_INTERFACE`, `TAU2_LLM_EVAL_USER_SIMULATOR`
+  (consumed in `src/tau2/config.py`).
+
+Then pass `--agent-llm` / `--user-llm` with the `litellm_proxy/` prefix for normal
+runs, and the **bare** public name for `claude_harness` (it becomes `claude --model`):
+
+```bash
+# normal run
+tau2 run --domain retail --agent-llm litellm_proxy/aws/claude-sonnet-4-5 \
+  --user-llm litellm_proxy/aws/claude-sonnet-4-5 --num-tasks 5
+# claude_harness — same base model, bare name
+tau2 run --domain retail --agent claude_harness --agent-llm aws/claude-sonnet-4-5 \
+  --user-llm litellm_proxy/aws/claude-sonnet-4-5 --num-tasks 5
+```
+
+`claude_harness` requires the gateway to expose the Anthropic `/v1/messages` route;
+if it is OpenAI-only, only the normal `llm_agent` path works.
+
 ## Common Commands
 
 | Command | What it does | Required install |

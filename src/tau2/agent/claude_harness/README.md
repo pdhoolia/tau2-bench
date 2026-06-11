@@ -71,19 +71,22 @@ harness, not a bigger model, is the variable under test.
 | `claude_bin`           | `claude`               | CLI binary.                              |
 | `extra_cli_args`       | `[]`                   | Extra raw flags appended to every call.  |
 
-## What is validated vs. pending live tuning
+## What is validated
 
 Validated by unit tests (no API key needed): stream-json parsing, the replay state
 machine (domain-call filtering, prefix stripping, fresh-id alignment, cost/session
 capture, fallbacks), per-task DB seeding round-trip, registry wiring, and CLI command
 assembly.
 
-**Pending live tuning** (cannot be exercised without `ANTHROPIC_API_KEY`): the exact
-`claude` CLI flag set — particularly plugin enablement (`--plugin-dir` vs a
-`settings.json` `enabledPlugins` entry) and whether `--strict-mcp-config` fully
-suppresses the plugin's own `.mcp.json`. The flag assembly lives in one overridable
-method (`ClaudeCLIRunner.build_command`) precisely so it can be adjusted where it
-runs. Tune there if a flag name has drifted.
+Validated live: the retail bridge has been run end-to-end through a LiteLLM gateway
+(Bedrock Claude Sonnet 4.5) with the `claude` CLI v2.1.173 — the flag set in
+`build_command` (`--plugin-dir`, `--mcp-config`, `--strict-mcp-config`,
+`--permission-mode bypassPermissions`, stream-json) drives the retail-harness plugin +
+MCP server, and the replayed trajectory scores on the tau2 evaluator (reward, action,
+and DB match). See [harnesses/playbook.md](../../../../harnesses/playbook.md) to
+reproduce. CLI flags can drift across versions, so the assembly stays in one
+overridable method (`ClaudeCLIRunner.build_command`) — tune there if a flag name has
+moved.
 
 ## Caveats
 
