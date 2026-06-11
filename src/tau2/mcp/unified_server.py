@@ -14,15 +14,13 @@ Usage:
 """
 
 import argparse
-import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
 
 import uvicorn
 from starlette.applications import Starlette
-from starlette.routing import Route, Mount
 from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 from tau2.mcp.airline_server import create_airline_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
@@ -51,9 +49,13 @@ def create_unified_http_app(
         Starlette application with all domains mounted
     """
     # Create the individual MCP servers
-    airline_mcp = create_airline_mcp_server(db_path=airline_db_path, name="tau2-airline")
+    airline_mcp = create_airline_mcp_server(
+        db_path=airline_db_path, name="tau2-airline"
+    )
     retail_mcp = create_retail_mcp_server(db_path=retail_db_path, name="tau2-retail")
-    telecom_mcp = create_telecom_mcp_server(db_path=telecom_db_path, name="tau2-telecom")
+    telecom_mcp = create_telecom_mcp_server(
+        db_path=telecom_db_path, name="tau2-telecom"
+    )
 
     # Create HTTP apps for each domain with their specific paths
     airline_app = airline_mcp.http_app(path="/mcp/airline", transport="streamable-http")
@@ -80,27 +82,29 @@ def create_unified_http_app(
 
     # Info endpoint
     async def info(request):
-        return JSONResponse({
-            "name": "tau2-bench-mcp",
-            "description": "Unified MCP server for Tau2-Bench domains",
-            "endpoints": {
-                "airline": {
-                    "url": "/mcp/airline",
-                    "tools": len(airline_mcp._tool_manager._tools),
-                    "description": "Flight booking, reservations, modifications"
+        return JSONResponse(
+            {
+                "name": "tau2-bench-mcp",
+                "description": "Unified MCP server for Tau2-Bench domains",
+                "endpoints": {
+                    "airline": {
+                        "url": "/mcp/airline",
+                        "tools": len(airline_mcp._tool_manager._tools),
+                        "description": "Flight booking, reservations, modifications",
+                    },
+                    "retail": {
+                        "url": "/mcp/retail",
+                        "tools": len(retail_mcp._tool_manager._tools),
+                        "description": "E-commerce orders, returns, exchanges",
+                    },
+                    "telecom": {
+                        "url": "/mcp/telecom",
+                        "tools": len(telecom_mcp._tool_manager._tools),
+                        "description": "Customer accounts, billing, line management",
+                    },
                 },
-                "retail": {
-                    "url": "/mcp/retail",
-                    "tools": len(retail_mcp._tool_manager._tools),
-                    "description": "E-commerce orders, returns, exchanges"
-                },
-                "telecom": {
-                    "url": "/mcp/telecom",
-                    "tools": len(telecom_mcp._tool_manager._tools),
-                    "description": "Customer accounts, billing, line management"
-                }
             }
-        })
+        )
 
     # Create the combined Starlette app
     # We need to include routes from all domain apps
@@ -136,41 +140,36 @@ Examples:
     #   http://localhost:8000/mcp/airline
     #   http://localhost:8000/mcp/retail
     #   http://localhost:8000/mcp/telecom
-        """
+        """,
     )
 
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port for HTTP server (default: 8000)"
+        "--port", type=int, default=8000, help="Port for HTTP server (default: 8000)"
     )
 
     parser.add_argument(
-        "--host",
-        default="0.0.0.0",
-        help="Host for HTTP server (default: 0.0.0.0)"
+        "--host", default="0.0.0.0", help="Host for HTTP server (default: 0.0.0.0)"
     )
 
     parser.add_argument(
         "--airline-db-path",
         type=str,
         default=None,
-        help="Path to airline database (optional)"
+        help="Path to airline database (optional)",
     )
 
     parser.add_argument(
         "--retail-db-path",
         type=str,
         default=None,
-        help="Path to retail database (optional)"
+        help="Path to retail database (optional)",
     )
 
     parser.add_argument(
         "--telecom-db-path",
         type=str,
         default=None,
-        help="Path to telecom database (optional)"
+        help="Path to telecom database (optional)",
     )
 
     args = parser.parse_args()

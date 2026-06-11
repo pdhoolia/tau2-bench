@@ -1,4 +1,15 @@
 # =============================================================================
+# ENV LOADING
+# Load .env up front so the os.getenv(...) overrides below resolve no matter
+# which module imports config first (config is otherwise pure constants).
+# =============================================================================
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# =============================================================================
 # SIMULATION DEFAULTS (overridable via CLI)
 # =============================================================================
 DEFAULT_MAX_STEPS = 200
@@ -21,15 +32,20 @@ DEFAULT_LLM_TEMPERATURE_USER = 0.0
 DEFAULT_LLM_ARGS_AGENT = {"temperature": DEFAULT_LLM_TEMPERATURE_AGENT}
 DEFAULT_LLM_ARGS_USER = {"temperature": DEFAULT_LLM_TEMPERATURE_USER}
 
-DEFAULT_LLM_NL_ASSERTIONS = "gpt-4.1-2025-04-14"
+# These three have NO CLI flag, so they are env-overridable here. Point them at a
+# LiteLLM gateway model (e.g. "litellm_proxy/aws/claude-sonnet-4-5") when the
+# default OpenAI/Anthropic ids are not reachable. Defaults preserve upstream behavior.
+DEFAULT_LLM_NL_ASSERTIONS = os.getenv("TAU2_LLM_NL_ASSERTIONS", "gpt-4.1-2025-04-14")
 DEFAULT_LLM_NL_ASSERTIONS_TEMPERATURE = 0.0
 DEFAULT_LLM_NL_ASSERTIONS_ARGS = {"temperature": DEFAULT_LLM_NL_ASSERTIONS_TEMPERATURE}
 
-DEFAULT_LLM_ENV_INTERFACE = "gpt-4.1-2025-04-14"
+DEFAULT_LLM_ENV_INTERFACE = os.getenv("TAU2_LLM_ENV_INTERFACE", "gpt-4.1-2025-04-14")
 DEFAULT_LLM_ENV_INTERFACE_TEMPERATURE = 0.0
 DEFAULT_LLM_ENV_INTERFACE_ARGS = {"temperature": DEFAULT_LLM_ENV_INTERFACE_TEMPERATURE}
 
-DEFAULT_LLM_EVAL_USER_SIMULATOR = "claude-opus-4-5"
+DEFAULT_LLM_EVAL_USER_SIMULATOR = os.getenv(
+    "TAU2_LLM_EVAL_USER_SIMULATOR", "claude-opus-4-5"
+)
 
 # LLM debug logging
 DEFAULT_LLM_LOG_MODE = "latest"  # Options: "all", "latest"

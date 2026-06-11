@@ -74,22 +74,27 @@ alone**, so it is fully deterministic regardless of order state or call ordering
 A violation returns a PreToolUse `deny` with a reason, which Claude Code surfaces
 back to the agent — the write never reaches the tool.
 
-### Deferred to the evaluation-bridge phase
+### Not yet enforced by the hook (still sub-agent-only)
 
 Invariants that need **live order status** — "order must be `pending`/`delivered`",
 gift-card balance sufficiency, one-shot-already-used, cross-user ownership — are
 *documented in the skills and checked by the `policy-auditor` sub-agent*, but are
 **not** yet enforced by the hook. The hook is intentionally stateless for now
-because a static read of `db.json` would not reflect in-session mutations. Phase 2
-(the `claude_harness` tau2 agent that bridges MCP tool calls back into the tau2
-trajectory) gives the hook access to the live environment state; those predicates
-move into the hook then, closing the gap the policy's "the agent must make sure"
-clauses point at.
+because a static read of `db.json` would not reflect in-session mutations. The
+`claude_harness` tau2 agent now bridges MCP tool calls back into the tau2 trajectory;
+a follow-up that feeds the hook live environment state would let those predicates move
+into the hook, closing the gap the policy's "the agent must make sure" clauses point
+at.
 
-## What this plugin does *not* do yet
+## Running it under tau2
 
-It is not wired into `tau2 run`. Running it head-to-head against the legacy
-`LLMAgent` and reporting the pass-rate delta requires the `--agent claude_harness`
-bridge, which is the next increment (Architecture B: Claude owns its loop and calls
-the real retail tools over MCP; the bridge reconciles those calls into the
-trajectory the evaluator scores).
+This plugin runs head-to-head against the legacy `llm_agent` via the
+`--agent claude_harness` bridge (Architecture B: Claude owns its loop and calls the
+real retail tools over MCP; the bridge reconciles those calls into the trajectory the
+evaluator scores — see [`src/tau2/agent/claude_harness/`](../../../src/tau2/agent/claude_harness)).
+For the end-to-end commands (preflight, smoke run, full run, the `run_eval.sh`
+shortcut), follow the [**evaluation playbook**](../../playbook.md).
+
+Still open: the live-status invariants listed above are checked by the
+`policy-auditor` sub-agent, not yet enforced by the (intentionally stateless)
+PreToolUse hook.
