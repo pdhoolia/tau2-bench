@@ -16,9 +16,8 @@ Usage:
 
 import argparse
 import functools
-import inspect
 from pathlib import Path
-from typing import Any, Callable, get_type_hints
+from typing import Any, Callable
 
 from fastmcp import FastMCP
 
@@ -74,6 +73,7 @@ def _wrap_tool_for_mcp(func: Callable, name: str) -> Callable:
     - Serializing Pydantic model responses to dict
     - Converting exceptions to error messages
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> dict[str, Any] | str | list:
         try:
@@ -91,7 +91,11 @@ def _wrap_tool_for_mcp(func: Callable, name: str) -> Callable:
                 ]
 
             # Handle list of tuples (for search_onestop_flight)
-            if isinstance(result, list) and result and isinstance(result[0], (list, tuple)):
+            if (
+                isinstance(result, list)
+                and result
+                and isinstance(result[0], (list, tuple))
+            ):
                 return [
                     [
                         item.model_dump() if hasattr(item, "model_dump") else item
@@ -130,40 +134,33 @@ Examples:
 
     # Use custom database
     python -m tau2.mcp.airline_server --db-path /custom/path/db.json
-        """
+        """,
     )
 
     parser.add_argument(
         "--transport",
         choices=["stdio", "http"],
         default="stdio",
-        help="Transport type: 'stdio' for local, 'http' for remote (default: stdio)"
+        help="Transport type: 'stdio' for local, 'http' for remote (default: stdio)",
     )
 
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port for HTTP transport (default: 8000)"
+        "--port", type=int, default=8000, help="Port for HTTP transport (default: 8000)"
     )
 
     parser.add_argument(
-        "--host",
-        default="0.0.0.0",
-        help="Host for HTTP transport (default: 0.0.0.0)"
+        "--host", default="0.0.0.0", help="Host for HTTP transport (default: 0.0.0.0)"
     )
 
     parser.add_argument(
         "--db-path",
         type=str,
         default=None,
-        help="Path to airline database JSON file (default: standard Tau2-Bench location)"
+        help="Path to airline database JSON file (default: standard Tau2-Bench location)",
     )
 
     parser.add_argument(
-        "--name",
-        default="tau2-airline",
-        help="Server name (default: tau2-airline)"
+        "--name", default="tau2-airline", help="Server name (default: tau2-airline)"
     )
 
     args = parser.parse_args()

@@ -22,7 +22,6 @@ from tau2.mcp.airline_server import create_airline_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
 from tau2.mcp.telecom_server import create_telecom_mcp_server
 
-
 DOMAIN_FACTORIES = {
     "airline": create_airline_mcp_server,
     "retail": create_retail_mcp_server,
@@ -48,47 +47,40 @@ Examples:
 
     # Use custom database
     python -m tau2.mcp --domain airline --db-path /custom/path/db.json
-        """
+        """,
     )
 
     parser.add_argument(
         "--domain",
         choices=["airline", "retail", "telecom"],
         default="airline",
-        help="Domain to run: airline, retail, or telecom (default: airline)"
+        help="Domain to run: airline, retail, or telecom (default: airline)",
     )
 
     parser.add_argument(
         "--transport",
         choices=["stdio", "http"],
         default="stdio",
-        help="Transport type: 'stdio' for local, 'http' for remote (default: stdio)"
+        help="Transport type: 'stdio' for local, 'http' for remote (default: stdio)",
     )
 
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port for HTTP transport (default: 8000)"
+        "--port", type=int, default=8000, help="Port for HTTP transport (default: 8000)"
     )
 
     parser.add_argument(
-        "--host",
-        default="0.0.0.0",
-        help="Host for HTTP transport (default: 0.0.0.0)"
+        "--host", default="0.0.0.0", help="Host for HTTP transport (default: 0.0.0.0)"
     )
 
     parser.add_argument(
         "--db-path",
         type=str,
         default=None,
-        help="Path to database file (default: standard Tau2-Bench location)"
+        help="Path to database file (default: standard Tau2-Bench location)",
     )
 
     parser.add_argument(
-        "--name",
-        default=None,
-        help="Server name (default: tau2-{domain})"
+        "--name", default=None, help="Server name (default: tau2-{domain})"
     )
 
     args = parser.parse_args()
