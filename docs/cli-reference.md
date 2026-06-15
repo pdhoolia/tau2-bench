@@ -176,11 +176,18 @@ tau2 check-data
 
 ## `tau2 start` — Start All Servers
 
-Start all domain servers.
+Start the simulation API service (FastAPI) on **http://127.0.0.1:8001**.
 
 ```bash
 tau2 start
 ```
+
+Open the Swagger UI at **http://127.0.0.1:8001/docs** to browse a domain's tasks
+(`POST /api/v1/get_tasks` with `{"domain": "<domain>"}`) and the run/evaluate endpoints.
+
+> For an end-to-end walkthrough of all three views — the domain viewer (`tau2 domain`,
+> `:8004`), the tasks/simulation API (`tau2 start`, `:8001`), and the results viewer
+> (`tau2 view`) — see [ui-viewers.md](ui-viewers.md).
 
 ---
 

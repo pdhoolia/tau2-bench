@@ -67,6 +67,7 @@ pytest tests/test_domains/test_<domain_name>
 | `retail` | Order management, returns, and product inquiries |
 | `telecom` | Telecom account management and troubleshooting |
 | `banking_knowledge` | Knowledge-retrieval-based banking customer service with configurable RAG pipelines |
+| `legal` | Boutique NSW law-firm client intake (LPUL): conflict checks, identity, costs disclosure, costs agreements, opening matters |
 
 ### `banking_knowledge` Domain
 
