@@ -3,7 +3,7 @@ Unified HTTP server exposing all Tau2-Bench domains as separate MCP endpoints.
 
 Each domain has its own MCP server with isolated tools, accessible at:
     - http://localhost:8000/mcp/airline  (14 airline tools)
-    - http://localhost:8000/mcp/retail   (15 retail tools)
+    - http://localhost:8000/mcp/retail   (16 retail tools)
     - http://localhost:8000/mcp/telecom  (13 telecom tools)
 
 Usage:
@@ -82,6 +82,11 @@ def create_unified_http_app(
 
     # Info endpoint
     async def info(request):
+        # FastMCP 3.x exposes tools via the public async list_tools() API
+        # (the older _tool_manager._tools internal attribute was removed).
+        airline_tools = await airline_mcp.list_tools()
+        retail_tools = await retail_mcp.list_tools()
+        telecom_tools = await telecom_mcp.list_tools()
         return JSONResponse(
             {
                 "name": "tau2-bench-mcp",
@@ -89,17 +94,17 @@ def create_unified_http_app(
                 "endpoints": {
                     "airline": {
                         "url": "/mcp/airline",
-                        "tools": len(airline_mcp._tool_manager._tools),
+                        "tools": len(airline_tools),
                         "description": "Flight booking, reservations, modifications",
                     },
                     "retail": {
                         "url": "/mcp/retail",
-                        "tools": len(retail_mcp._tool_manager._tools),
+                        "tools": len(retail_tools),
                         "description": "E-commerce orders, returns, exchanges",
                     },
                     "telecom": {
                         "url": "/mcp/telecom",
-                        "tools": len(telecom_mcp._tool_manager._tools),
+                        "tools": len(telecom_tools),
                         "description": "Customer accounts, billing, line management",
                     },
                 },

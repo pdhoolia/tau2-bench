@@ -7,7 +7,7 @@ FastMCP servers wrapping the Tau2-Bench domain tools for use with MCP-compatible
 | Domain      | Tools | Description                                                |
 |-------------|-------|------------------------------------------------------------|
 | **Airline** | 14    | Flight booking, reservations, cancellations, modifications |
-| **Retail**  | 15    | E-commerce orders, returns, exchanges, user management     |
+| **Retail**  | 16    | E-commerce orders, returns, exchanges, user management     |
 | **Telecom** | 13    | Customer accounts, billing, line management, data usage    |
 
 ## Installation
@@ -175,13 +175,14 @@ Connect using:
 - `calculate(expression)` - Evaluate mathematical expressions
 - `transfer_to_human_agents(summary)` - Transfer to human support
 
-### Retail Domain (15 tools)
+### Retail Domain (16 tools)
 
 #### Read Tools
 
 - `get_user_details(user_id)` - Get user profile with orders
 - `get_order_details(order_id)` - Get order details
 - `get_product_details(product_id)` - Get product inventory details
+- `get_item_details(item_id)` - Get details for a specific item variant
 - `list_all_product_types()` - List all products (50 types)
 - `find_user_id_by_email(email)` - Find user by email
 - `find_user_id_by_name_zip(first_name, last_name, zip)` - Find user by name and zip
