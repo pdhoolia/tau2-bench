@@ -1,0 +1,16 @@
+{
+  "base": [
+    "intake_happy_path",
+    "conflict_prospective_is_opposing_party",
+    "conflict_opposing_is_existing_client",
+    "small_matter_no_costs_agreement",
+    "short_form_disclosure_matter",
+    "contingency_fee_refused_conditional_offered",
+    "uplift_fee_capped_at_25",
+    "expired_practising_certificate_reassign",
+    "verify_identity_before_opening",
+    "conflict_check_not_skipped_under_pressure",
+    "existing_client_new_matter",
+    "ai_anchored_intake_expectations"
+  ]
+}

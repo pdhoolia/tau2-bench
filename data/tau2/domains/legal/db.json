@@ -1,0 +1,129 @@
+{
+  "practitioners": {
+    "prac_johnson": {
+      "practitioner_id": "prac_johnson",
+      "name": "Sarah Johnson",
+      "pc_status": "current",
+      "pc_expiry": "2026-06-30",
+      "pc_type": "principal",
+      "cpd_units": 12.0,
+      "practice_areas": ["commercial", "litigation"]
+    },
+    "prac_nguyen": {
+      "practitioner_id": "prac_nguyen",
+      "name": "David Nguyen",
+      "pc_status": "current",
+      "pc_expiry": "2026-06-30",
+      "pc_type": "employee",
+      "cpd_units": 8.5,
+      "practice_areas": ["family", "conveyancing"]
+    },
+    "prac_white": {
+      "practitioner_id": "prac_white",
+      "name": "Emma White",
+      "pc_status": "expired",
+      "pc_expiry": "2025-06-30",
+      "pc_type": "employee",
+      "cpd_units": 4.0,
+      "practice_areas": ["litigation"]
+    },
+    "prac_chen": {
+      "practitioner_id": "prac_chen",
+      "name": "Michael Chen",
+      "pc_status": "suspended",
+      "pc_expiry": "2026-06-30",
+      "pc_type": "principal",
+      "cpd_units": 10.0,
+      "practice_areas": ["commercial"]
+    }
+  },
+  "clients": {
+    "client_smith": {
+      "client_id": "client_smith",
+      "name": "John Smith",
+      "client_type": "individual",
+      "email": "john.smith@example.com",
+      "phone": "0412 345 678",
+      "identity_verified": true,
+      "date_of_birth": "1980-03-12",
+      "abn": null,
+      "address": "12 Wattle Street, Sydney NSW 2000"
+    },
+    "client_acme": {
+      "client_id": "client_acme",
+      "name": "Acme Pty Ltd",
+      "client_type": "company",
+      "email": "legal@acme.com.au",
+      "phone": "02 9000 1111",
+      "identity_verified": true,
+      "date_of_birth": null,
+      "abn": "11 222 333 444",
+      "address": "Level 5, 100 George Street, Sydney NSW 2000"
+    },
+    "client_brown": {
+      "client_id": "client_brown",
+      "name": "Patricia Brown",
+      "client_type": "individual",
+      "email": "p.brown@example.com",
+      "phone": "0423 111 222",
+      "identity_verified": true,
+      "date_of_birth": "1975-09-01",
+      "abn": null,
+      "address": "8 Banksia Avenue, Parramatta NSW 2150"
+    },
+    "client_taylor": {
+      "client_id": "client_taylor",
+      "name": "Robert Taylor",
+      "client_type": "individual",
+      "email": "rob.taylor@example.com",
+      "phone": "0434 555 666",
+      "identity_verified": false,
+      "date_of_birth": "1990-01-20",
+      "abn": null,
+      "address": "3 Carlton Road, Newcastle NSW 2300"
+    }
+  },
+  "conflict_checks": {},
+  "costs_agreements": {},
+  "matters": {
+    "matter_001": {
+      "matter_id": "matter_001",
+      "client_id": "client_smith",
+      "responsible_practitioner_id": "prac_johnson",
+      "matter_type": "commercial",
+      "description": "Contract dispute with a supplier.",
+      "opposing_parties": ["Greenfield Holdings Pty Ltd"],
+      "estimated_costs": 15000.0,
+      "status": "open",
+      "conflict_check_id": null,
+      "costs_agreement_id": null,
+      "opened_date": "2026-02-10"
+    },
+    "matter_002": {
+      "matter_id": "matter_002",
+      "client_id": "client_acme",
+      "responsible_practitioner_id": "prac_nguyen",
+      "matter_type": "litigation",
+      "description": "Recovery of unpaid invoices.",
+      "opposing_parties": ["Robert Taylor"],
+      "estimated_costs": 22000.0,
+      "status": "open",
+      "conflict_check_id": null,
+      "costs_agreement_id": null,
+      "opened_date": "2026-03-01"
+    },
+    "matter_003": {
+      "matter_id": "matter_003",
+      "client_id": "client_brown",
+      "responsible_practitioner_id": "prac_nguyen",
+      "matter_type": "conveyancing",
+      "description": "Purchase of a residential property.",
+      "opposing_parties": [],
+      "estimated_costs": 2200.0,
+      "status": "open",
+      "conflict_check_id": null,
+      "costs_agreement_id": null,
+      "opened_date": "2026-04-15"
+    }
+  }
+}

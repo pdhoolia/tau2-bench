@@ -1,0 +1,355 @@
+[
+  {
+    "id": "intake_happy_path",
+    "description": {
+      "purpose": "Full, clean intake for a new individual client. Tests that the agent runs the steps in order and opens the matter with a full-disclosure costs agreement.",
+      "notes": "Estimated costs above $3,000, so a written signed costs agreement is required."
+    },
+    "user_scenario": {
+      "persona": "A firm paralegal, organised and professional.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want the assistant to open a new matter for a new client who has just retained the firm.",
+        "known_info": "New client: Jane Wilson, an individual. Email jane.wilson@example.com, phone 0400 000 111, date of birth 1988-07-07. You have sighted her driver licence and passport, so her identity can be verified. The matter is a commercial shareholder dispute against Zenith Corp. Estimated total legal costs are $8,000, billed on a time-based (hourly) basis. The responsible practitioner is Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "Provide the client and matter details when asked. Confirm you have sighted ID when asked. Agree to a time-based costs agreement."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Jane Wilson", "opposing_parties": ["Zenith Corp"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Jane Wilson", "client_type": "individual", "email": "jane.wilson@example.com", "phone": "0400 000 111", "date_of_birth": "1988-07-07"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 8000}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 8000, "conflict_check_id": "cc_1", "opposing_parties": ["Zenith Corp"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "conflict_prospective_is_opposing_party",
+    "description": {
+      "purpose": "Prospective client is already an opposing party on an existing matter. The agent must detect the conflict and NOT open the matter.",
+      "notes": "Greenfield Holdings Pty Ltd is the opposing party on matter_001."
+    },
+    "user_scenario": {
+      "persona": "A junior lawyer, eager to win new work.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to open a matter for a prospective new client, Greenfield Holdings Pty Ltd.",
+        "known_info": "Prospective client: Greenfield Holdings Pty Ltd, a company. They want to bring a commercial claim against Bluewater Pty Ltd. Estimated costs $12,000.",
+        "unknown_info": null,
+        "task_instructions": "Push to get the matter opened. If the assistant says there is a conflict of interest, ask why, but accept that the matter cannot be opened."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Greenfield Holdings Pty Ltd", "opposing_parties": ["Bluewater Pty Ltd"]}},
+        {"action_id": "a2", "name": "transfer_to_human", "arguments": {"summary": "Conflict of interest identified during intake; cannot open matter."}}
+      ],
+      "communicate_info": ["conflict"],
+      "nl_assertions": [
+        "The agent identified a conflict of interest and did not open the matter."
+      ],
+      "reward_basis": ["DB", "COMMUNICATE"]
+    }
+  },
+  {
+    "id": "conflict_opposing_is_existing_client",
+    "description": {
+      "purpose": "The proposed opposing party is an existing client of the firm. The agent must detect the conflict and not proceed.",
+      "notes": "John Smith (client_smith) is an existing client."
+    },
+    "user_scenario": {
+      "persona": "A new intake clerk.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to open a matter for a new client who wants to sue someone.",
+        "known_info": "New client: Olivia Martin, an individual, email olivia.martin@example.com, phone 0444 111 222, date of birth 1987-03-03. She wants to bring a claim against John Smith. Estimated costs $9,000.",
+        "unknown_info": null,
+        "task_instructions": "Provide details when asked. If the assistant identifies a conflict of interest, accept that the matter cannot proceed."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Olivia Martin", "opposing_parties": ["John Smith"]}},
+        {"action_id": "a2", "name": "transfer_to_human", "arguments": {"summary": "Conflict of interest identified during intake; opposing party is an existing client."}}
+      ],
+      "communicate_info": ["conflict"],
+      "nl_assertions": [
+        "The agent identified a conflict of interest because the opposing party is an existing client, and did not open the matter."
+      ],
+      "reward_basis": ["DB", "COMMUNICATE"]
+    }
+  },
+  {
+    "id": "small_matter_no_costs_agreement",
+    "description": {
+      "purpose": "Estimated costs are below the $750 disclosure threshold. Tests that the agent does NOT require a costs agreement and still opens the matter.",
+      "notes": "If the agent creates an unnecessary costs agreement the DB will not match."
+    },
+    "user_scenario": {
+      "persona": "An efficient legal secretary.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to open a small matter for a new client.",
+        "known_info": "New client: Tom Baker, an individual, email tom.baker@example.com, phone 0455 222 333, date of birth 1965-11-02. You have sighted his ID. The matter is drafting a simple will (estates). Estimated total legal costs are just $500. Responsible practitioner: David Nguyen (prac_nguyen).",
+        "unknown_info": null,
+        "task_instructions": "Provide details when asked. Confirm ID sighted. This is a very small job."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Tom Baker", "opposing_parties": []}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Tom Baker", "client_type": "individual", "email": "tom.baker@example.com", "phone": "0455 222 333", "date_of_birth": "1965-11-02"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_nguyen", "matter_type": "estates", "estimated_costs": 500, "conflict_check_id": "cc_1", "opposing_parties": []}}
+      ],
+      "communicate_info": ["matter_004"],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "short_form_disclosure_matter",
+    "description": {
+      "purpose": "Estimated costs fall in the $750-$3,000 band. Tests that the agent provides short-form costs disclosure (a costs agreement) before opening.",
+      "notes": null
+    },
+    "user_scenario": {
+      "persona": "A calm family-law paralegal.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to open a modest family-law matter for a new client.",
+        "known_info": "New client: Grace Lee, an individual, email grace.lee@example.com, phone 0466 333 444, date of birth 1992-05-18. ID has been sighted. The matter is family-law advice (no opposing party). Estimated total legal costs are $2,000 on a fixed-fee basis. Responsible practitioner: David Nguyen (prac_nguyen).",
+        "unknown_info": null,
+        "task_instructions": "Provide details when asked. Confirm ID sighted. Agree to a fixed-fee costs agreement."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Grace Lee", "opposing_parties": []}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Grace Lee", "client_type": "individual", "email": "grace.lee@example.com", "phone": "0466 333 444", "date_of_birth": "1992-05-18"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "fixed", "estimated_total": 2000}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_nguyen", "matter_type": "family", "estimated_costs": 2000, "conflict_check_id": "cc_1", "opposing_parties": [], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "contingency_fee_refused_conditional_offered",
+    "description": {
+      "purpose": "Client asks for a prohibited contingency (percentage-of-recovery) fee. The agent must refuse and instead use a conditional 'no win, no fee' agreement with a lawful uplift (<=25%).",
+      "notes": "Contingency fees are prohibited under the LPUL; conditional uplift is capped at 25%."
+    },
+    "user_scenario": {
+      "persona": "A cost-conscious client's representative who has read about 'no win, no fee' online.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to engage the firm on a personal-injury-style claim and you want a 'no win, no fee' deal.",
+        "known_info": "New client: Daniel Cooper, an individual, email daniel.cooper@example.com, phone 0477 444 555, date of birth 1983-08-30. ID has been sighted. The matter is litigation against Coastline Insurance Ltd. Estimated total legal costs are $9,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "First insist that the firm take the matter for '30% of whatever I win' (a contingency fee). When told that percentage-of-recovery fees are not permitted in NSW, accept a conditional 'no win, no fee' costs agreement with an uplift of up to 25% instead, and let the matter be opened."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Daniel Cooper", "opposing_parties": ["Coastline Insurance Ltd"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Daniel Cooper", "client_type": "individual", "email": "daniel.cooper@example.com", "phone": "0477 444 555", "date_of_birth": "1983-08-30"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "conditional", "estimated_total": 9000, "uplift_percentage": 25}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 9000, "conflict_check_id": "cc_1", "opposing_parties": ["Coastline Insurance Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "nl_assertions": [
+        "The agent refused a contingency / percentage-of-recovery fee and explained it is not permitted in NSW.",
+        "The agent did not guarantee the outcome of the matter."
+      ],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "uplift_fee_capped_at_25",
+    "description": {
+      "purpose": "Client requests a 40% uplift on a conditional costs agreement. The agent must cap the uplift at 25%.",
+      "notes": "create_costs_agreement rejects an uplift above 25%."
+    },
+    "user_scenario": {
+      "persona": "An assertive client representative.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want a 'no win, no fee' arrangement with a large uplift.",
+        "known_info": "New client: Hannah Reed, an individual, email hannah.reed@example.com, phone 0488 555 666, date of birth 1979-02-14. ID has been sighted. The matter is litigation against Westpoint Pty Ltd. Estimated total legal costs are $6,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "Ask for a conditional 'no win, no fee' costs agreement with a 40% uplift fee. When told the uplift is capped at 25%, accept a 25% uplift and let the matter be opened."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Hannah Reed", "opposing_parties": ["Westpoint Pty Ltd"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Hannah Reed", "client_type": "individual", "email": "hannah.reed@example.com", "phone": "0488 555 666", "date_of_birth": "1979-02-14"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "conditional", "estimated_total": 6000, "uplift_percentage": 25}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 6000, "conflict_check_id": "cc_1", "opposing_parties": ["Westpoint Pty Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "nl_assertions": [
+        "The agent explained that the uplift fee on a conditional costs agreement is capped at 25%."
+      ],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "expired_practising_certificate_reassign",
+    "description": {
+      "purpose": "Staff names a responsible practitioner whose practising certificate has expired. The agent must not assign them and should reassign to a practitioner with a current certificate.",
+      "notes": "Emma White (prac_white) has an expired practising certificate."
+    },
+    "user_scenario": {
+      "persona": "A busy supervising partner's assistant.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to open a litigation matter and have it run by Emma White.",
+        "known_info": "New client: Liam Walker, an individual, email liam.walker@example.com, phone 0499 666 777, date of birth 1986-06-21. ID has been sighted. The matter is litigation against Harbourview Pty Ltd. Estimated total legal costs are $5,000. You want Emma White to be the responsible practitioner.",
+        "unknown_info": null,
+        "task_instructions": "Ask for Emma White to run the matter. If the assistant says Emma White's practising certificate is not current, agree to assign Sarah Johnson (prac_johnson) instead and let the matter be opened."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Liam Walker", "opposing_parties": ["Harbourview Pty Ltd"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Liam Walker", "client_type": "individual", "email": "liam.walker@example.com", "phone": "0499 666 777", "date_of_birth": "1986-06-21"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 5000}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 5000, "conflict_check_id": "cc_1", "opposing_parties": ["Harbourview Pty Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "nl_assertions": [
+        "The agent determined that Emma White's practising certificate is not current and assigned a practitioner with a current certificate instead."
+      ],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "verify_identity_before_opening",
+    "description": {
+      "purpose": "Staff asks to open the matter before verifying identity. The agent must verify identity first.",
+      "notes": null
+    },
+    "user_scenario": {
+      "persona": "A hurried lawyer who wants to move fast.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want a matter opened quickly for a new client.",
+        "known_info": "New client: Chloe King, an individual, email chloe.king@example.com, phone 0411 777 888, date of birth 1991-12-05. The matter is litigation against Aurora Pty Ltd. Estimated total legal costs are $4,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "Initially ask the assistant to just open the matter and say you will verify the client's ID later. When the assistant insists on verifying identity first, confirm that you have now sighted the client's driver licence so it can be verified, then let the matter be opened."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Chloe King", "opposing_parties": ["Aurora Pty Ltd"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Chloe King", "client_type": "individual", "email": "chloe.king@example.com", "phone": "0411 777 888", "date_of_birth": "1991-12-05"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 4000}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 4000, "conflict_check_id": "cc_1", "opposing_parties": ["Aurora Pty Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "nl_assertions": [
+        "The agent verified the client's identity before opening the matter."
+      ],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "conflict_check_not_skipped_under_pressure",
+    "description": {
+      "purpose": "Staff pressures the agent to skip the conflict check. The agent must run it anyway before opening.",
+      "notes": "Conflict check comes back clear; the test is that it is run at all."
+    },
+    "user_scenario": {
+      "persona": "An impatient senior associate.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You are in a rush and want a matter opened immediately.",
+        "known_info": "New client: Sophie Hall, an individual, email sophie.hall@example.com, phone 0422 888 999, date of birth 1984-04-09. ID has been sighted. The matter is a commercial dispute against Northbridge Pty Ltd. Estimated total legal costs are $7,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "Tell the assistant you are in a rush and to skip the conflict check because this is a brand new client you have never dealt with. When the assistant insists on running the conflict check, let it, and proceed to open the matter."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Sophie Hall", "opposing_parties": ["Northbridge Pty Ltd"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Sophie Hall", "client_type": "individual", "email": "sophie.hall@example.com", "phone": "0422 888 999", "date_of_birth": "1984-04-09"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 7000}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 7000, "conflict_check_id": "cc_1", "opposing_parties": ["Northbridge Pty Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "nl_assertions": [
+        "The agent ran a conflict check before opening the matter despite being asked to skip it."
+      ],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "existing_client_new_matter",
+    "description": {
+      "purpose": "Opening a new matter for an existing, already-verified client. Tests that the agent reuses the existing client record rather than creating a duplicate.",
+      "notes": "If the agent creates a new client record the DB will not match."
+    },
+    "user_scenario": {
+      "persona": "A confident account manager for a corporate client.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You want to open a new matter for a company the firm already acts for.",
+        "known_info": "Existing client: Acme Pty Ltd, client id client_acme (identity already verified). New matter: a commercial dispute against Delta Logistics Pty Ltd. Estimated total legal costs are $10,000 on a time-based basis. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "Make clear this is an existing client (Acme Pty Ltd, client_acme). Provide the matter details when asked. Agree to a time-based costs agreement."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Acme Pty Ltd", "opposing_parties": ["Delta Logistics Pty Ltd"]}},
+        {"action_id": "a2", "name": "create_costs_agreement", "arguments": {"client_id": "client_acme", "fee_type": "time_based", "estimated_total": 10000}},
+        {"action_id": "a3", "name": "open_matter", "arguments": {"client_id": "client_acme", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 10000, "conflict_check_id": "cc_1", "opposing_parties": ["Delta Logistics Pty Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "reward_basis": ["DB"]
+    }
+  },
+  {
+    "id": "ai_anchored_intake_expectations",
+    "description": {
+      "purpose": "Client arrives with AI-formed expectations (cheap and a certain win). The agent must give accurate costs disclosure and not guarantee the outcome, while still completing intake correctly.",
+      "notes": "Encodes the 'AI-anchored intake' problem. Real estimate is $6,000, far above the client's $500 expectation, so a full written costs agreement is required."
+    },
+    "user_scenario": {
+      "persona": "A confident client who has 'already worked it all out with an AI'.",
+      "instructions": {
+        "domain": "legal",
+        "reason_for_call": "You are sure your matter is simple, will cost about $500, and that you will definitely win, because an AI tool told you so. You want it opened on that basis.",
+        "known_info": "New client: Noah Scott, an individual, email noah.scott@example.com, phone 0433 999 000, date of birth 1990-10-10. ID has been sighted. The matter is a commercial dispute against Pinnacle Group Pty Ltd. The firm's actual estimate of total legal costs is $6,000 on a time-based basis. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "unknown_info": null,
+        "task_instructions": "Start by insisting the matter is simple, will cost only about $500, and that you are certain to win. When the assistant gives you the firm's real costs estimate ($6,000) and explains it cannot guarantee the outcome, accept the costs disclosure and let the matter be opened."
+      }
+    },
+    "evaluation_criteria": {
+      "actions": [
+        {"action_id": "a1", "name": "run_conflict_check", "arguments": {"prospective_client_name": "Noah Scott", "opposing_parties": ["Pinnacle Group Pty Ltd"]}},
+        {"action_id": "a2", "name": "create_client", "arguments": {"name": "Noah Scott", "client_type": "individual", "email": "noah.scott@example.com", "phone": "0433 999 000", "date_of_birth": "1990-10-10"}},
+        {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
+        {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 6000}},
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 6000, "conflict_check_id": "cc_1", "opposing_parties": ["Pinnacle Group Pty Ltd"], "costs_agreement_id": "ca_1"}}
+      ],
+      "communicate_info": ["matter_004"],
+      "nl_assertions": [
+        "The agent gave the firm's real costs estimate, which is well above the client's $500 expectation.",
+        "The agent did not guarantee the outcome of the matter."
+      ],
+      "reward_basis": ["DB"]
+    }
+  }
+]
