@@ -13,12 +13,17 @@ Pre-req: the conflict check for this matter has returned `clear`.
 1. **Search first to avoid duplicates.** Call `find_clients(name)` with the
    client's name (or part of it). If a matching client already exists, reuse that
    record — note its `client_id` and do **not** create a second one.
-2. **Create only if new.** If there is no existing record, gather the required
-   details and call `create_client`:
+2. **Create only if new.** If there is no existing record, gather the details and
+   call `create_client`:
    - `name`, `client_type` (`individual` or `company`), `email`, `phone`;
    - for an individual, `date_of_birth`; for a company, `abn`;
-   - `address` if available.
-   Ask for any required detail you do not have — never invent client details.
+   - `address` if the client gave one.
+   The record must reflect **exactly what the client supplied — no more, no less**:
+   - **Include every detail the client did provide.** If they gave a date of birth,
+     ABN or address, pass it. Do **not** drop a detail the client actually stated.
+   - **Never invent a detail the client did not provide.** In particular, do not
+     fabricate an `address` (or `date_of_birth` / `abn`); if it was not given, leave
+     it null. Ask for any *required* detail you are missing rather than guessing.
 
 ## Verify identity
 

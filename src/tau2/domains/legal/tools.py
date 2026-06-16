@@ -378,7 +378,7 @@ class LegalTools(ToolKitBase):
         Args:
             client_id: The client the matter is for.
             responsible_practitioner_id: Practitioner who will run the matter.
-            matter_type: Area of law: 'commercial', 'litigation', 'family', 'conveyancing', 'estates', or 'employment'.
+            matter_type: Area of law: 'commercial', 'family', 'conveyancing', 'estates', or 'employment'.
             estimated_costs: Estimated total legal costs (AUD).
             conflict_check_id: A cleared conflict check for this matter.
             opposing_parties: Opposing parties on the matter.

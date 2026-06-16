@@ -207,6 +207,256 @@ def test_precheck_denies_blank_conflict_check():
 
 
 # ---------------------------------------------------------------------------
+# precheck_write.py — conversation-aware provenance check (create_client)
+# ---------------------------------------------------------------------------
+
+
+def _run_precheck_with_transcript(tool_name, tool_input, user_turns, tmp_path):
+    """Run the precheck with a synthetic transcript of `user_turns` (user-role text).
+
+    A cleared conflict-check result is seeded first so the conflict-check-first guard
+    (which gates create_client) is satisfied and these tests exercise *provenance*.
+    """
+    transcript = tmp_path / "session.jsonl"
+    cleared_check = {
+        "type": "user",
+        "message": {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "content": json.dumps(
+                        {"conflict_check_id": "cc_1", "status": "clear"}
+                    ),
+                }
+            ],
+        },
+    }
+    with transcript.open("w", encoding="utf-8") as fh:
+        fh.write(json.dumps(cleared_check) + "\n")
+        for text in user_turns:
+            fh.write(
+                json.dumps(
+                    {"type": "user", "message": {"role": "user", "content": text}}
+                )
+                + "\n"
+            )
+    payload = json.dumps(
+        {
+            "tool_name": tool_name,
+            "tool_input": tool_input,
+            "transcript_path": str(transcript),
+        }
+    )
+    proc = subprocess.run(
+        [sys.executable, str(_PRECHECK)], input=payload, capture_output=True, text=True
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout.strip()
+    return json.loads(out)["hookSpecificOutput"] if out else None
+
+
+def test_precheck_denies_fabricated_address(tmp_path):
+    # Sydney-firm transcript that never mentions the street: the city/postcode
+    # tokens must not lend a fabricated street false provenance.
+    result = _run_precheck_with_transcript(
+        "mcp__tau2-legal__create_client",
+        {"name": "Jane Doe", "address": "42 Maple Street, Sydney NSW 2000"},
+        ["Hi, I'd like to open a matter. I'm based in Sydney 2000."],
+        tmp_path,
+    )
+    assert _is_deny(result)
+    assert "provenance" in result["permissionDecisionReason"].lower()
+    # The deny message must NOT echo the rejected value (else it pollutes the
+    # transcript corpus and a retry copying it back would gain false provenance).
+    assert "Maple" not in result["permissionDecisionReason"]
+
+
+def test_precheck_allows_client_provided_address_with_appended_context(tmp_path):
+    # Client stated the distinctive street; model appended city/state/postcode.
+    result = _run_precheck_with_transcript(
+        "mcp__tau2-legal__create_client",
+        {"name": "Jane Doe", "address": "42 Maple Street, Sydney NSW 2000"},
+        ["My address is 42 Maple Street."],
+        tmp_path,
+    )
+    assert result is None
+
+
+def test_precheck_allows_address_when_no_transcript():
+    # No provenance source available -> fail open (do not block the run).
+    result = _run_precheck(
+        "mcp__tau2-legal__create_client",
+        {"name": "Jane Doe", "address": "42 Maple Street, Sydney NSW 2000"},
+    )
+    assert result is None
+
+
+def test_precheck_denies_fabricated_dob(tmp_path):
+    result = _run_precheck_with_transcript(
+        "mcp__tau2-legal__create_client",
+        {"name": "Jane Doe", "date_of_birth": "1985-03-15"},
+        ["Hi, I'd like to open a conveyancing matter please."],
+        tmp_path,
+    )
+    assert _is_deny(result)
+
+
+def test_precheck_allows_client_provided_dob(tmp_path):
+    result = _run_precheck_with_transcript(
+        "mcp__tau2-legal__create_client",
+        {"name": "Jane Doe", "date_of_birth": "1985-03-15"},
+        ["My date of birth is 15 March 1985."],
+        tmp_path,
+    )
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# precheck_write.py — conflict-check-first guard (create_client / open_matter)
+# ---------------------------------------------------------------------------
+
+
+def _run_precheck_with_records(tool_name, tool_input, records, tmp_path):
+    """Run the precheck against a transcript built from raw jsonl records."""
+    transcript = tmp_path / "t.jsonl"
+    with transcript.open("w", encoding="utf-8") as fh:
+        for rec in records:
+            fh.write(json.dumps(rec) + "\n")
+    payload = json.dumps(
+        {
+            "tool_name": tool_name,
+            "tool_input": tool_input,
+            "transcript_path": str(transcript),
+        }
+    )
+    proc = subprocess.run(
+        [sys.executable, str(_PRECHECK)], input=payload, capture_output=True, text=True
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout.strip()
+    return json.loads(out)["hookSpecificOutput"] if out else None
+
+
+def _conflict_result_record(cid="cc_1", status="clear"):
+    """A transcript user line carrying a run_conflict_check tool_result."""
+    result = {
+        "conflict_check_id": cid,
+        "prospective_client_name": "Sophie Hall",
+        "opposing_parties": ["Northbridge Pty Ltd"],
+        "matches": [] if status == "clear" else [{"name": "Northbridge Pty Ltd"}],
+        "status": status,
+        "performed_date": "2026-06-15",
+    }
+    return {
+        "type": "user",
+        "message": {
+            "role": "user",
+            "content": [{"type": "tool_result", "content": json.dumps(result)}],
+        },
+    }
+
+
+_NEW_CLIENT = {
+    "name": "Sophie Hall",
+    "client_type": "individual",
+    "email": "sophie.hall@example.com",
+    "phone": "0422 888 999",
+}
+
+
+def test_conflict_first_denies_create_client_without_clear_check(tmp_path):
+    rec = {"type": "user", "message": {"role": "user", "content": "Open a matter."}}
+    result = _run_precheck_with_records(
+        "mcp__tau2-legal__create_client", _NEW_CLIENT, [rec], tmp_path
+    )
+    assert _is_deny(result)
+    assert "conflict" in result["permissionDecisionReason"].lower()
+
+
+def test_conflict_first_allows_create_client_after_clear_check(tmp_path):
+    result = _run_precheck_with_records(
+        "mcp__tau2-legal__create_client",
+        _NEW_CLIENT,
+        [_conflict_result_record(status="clear")],
+        tmp_path,
+    )
+    assert result is None
+
+
+def test_conflict_first_denies_create_client_when_conflict_found(tmp_path):
+    # A conflict_found result is not 'clear' -> still gated (agent must escalate).
+    result = _run_precheck_with_records(
+        "mcp__tau2-legal__create_client",
+        _NEW_CLIENT,
+        [_conflict_result_record(status="conflict_found")],
+        tmp_path,
+    )
+    assert _is_deny(result)
+
+
+def test_conflict_first_denies_open_matter_without_matching_clear_check(tmp_path):
+    result = _run_precheck_with_records(
+        "mcp__tau2-legal__open_matter",
+        {
+            "client_id": "client_005",
+            "responsible_practitioner_id": "prac_johnson",
+            "matter_type": "conveyancing",
+            "estimated_costs": 500,
+            "conflict_check_id": "cc_2",  # not the cleared cc_1
+        },
+        [_conflict_result_record(cid="cc_1", status="clear")],
+        tmp_path,
+    )
+    assert _is_deny(result)
+
+
+def test_conflict_first_allows_open_matter_with_matching_clear_check(tmp_path):
+    result = _run_precheck_with_records(
+        "mcp__tau2-legal__open_matter",
+        {
+            "client_id": "client_005",
+            "responsible_practitioner_id": "prac_johnson",
+            "matter_type": "conveyancing",
+            "estimated_costs": 500,
+            "conflict_check_id": "cc_1",
+        },
+        [_conflict_result_record(cid="cc_1", status="clear")],
+        tmp_path,
+    )
+    assert result is None
+
+
+def test_conflict_first_fails_open_without_transcript():
+    # No transcript -> cannot judge -> do not block (open_matter's own arg checks
+    # and the tool still apply).
+    result = _run_precheck(
+        "mcp__tau2-legal__open_matter",
+        {
+            "client_id": "client_005",
+            "responsible_practitioner_id": "prac_johnson",
+            "matter_type": "conveyancing",
+            "estimated_costs": 500,
+            "conflict_check_id": "cc_1",
+        },
+    )
+    assert result is None
+
+
+def test_precheck_allows_dob_stated_in_words(tmp_path):
+    # Regression: an ISO date_of_birth must be recognised as provenanced when the
+    # client stated it in word form ("9th of April 1984"); the zero-padded '04'/'09'
+    # never appear as literal tokens, so a plain token match would false-deny.
+    result = _run_precheck_with_transcript(
+        "mcp__tau2-legal__create_client",
+        {"name": "Sophie Hall", "date_of_birth": "1984-04-09"},
+        ["Her date of birth is 9th of April 1984."],
+        tmp_path,
+    )
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
 # legal MCP server — tool registration
 # ---------------------------------------------------------------------------
 

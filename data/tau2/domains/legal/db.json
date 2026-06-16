@@ -7,7 +7,7 @@
       "pc_expiry": "2026-06-30",
       "pc_type": "principal",
       "cpd_units": 12.0,
-      "practice_areas": ["commercial", "litigation"]
+      "practice_areas": ["commercial"]
     },
     "prac_nguyen": {
       "practitioner_id": "prac_nguyen",
@@ -25,7 +25,7 @@
       "pc_expiry": "2025-06-30",
       "pc_type": "employee",
       "cpd_units": 4.0,
-      "practice_areas": ["litigation"]
+      "practice_areas": ["commercial"]
     },
     "prac_chen": {
       "practitioner_id": "prac_chen",
@@ -103,7 +103,7 @@
       "matter_id": "matter_002",
       "client_id": "client_acme",
       "responsible_practitioner_id": "prac_nguyen",
-      "matter_type": "litigation",
+      "matter_type": "commercial",
       "description": "Recovery of unpaid invoices.",
       "opposing_parties": ["Robert Taylor"],
       "estimated_costs": 22000.0,

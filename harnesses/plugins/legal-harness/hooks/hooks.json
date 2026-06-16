@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__tau2-legal__run_conflict_check|mcp__tau2-legal__create_costs_agreement|mcp__tau2-legal__open_matter",
+        "matcher": "mcp__tau2-legal__run_conflict_check|mcp__tau2-legal__create_client|mcp__tau2-legal__create_costs_agreement|mcp__tau2-legal__open_matter",
         "hooks": [
           {
             "type": "command",
