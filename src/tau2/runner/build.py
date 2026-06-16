@@ -120,6 +120,7 @@ def build_agent(
         llm=llm,
         llm_args=llm_args,
         task=task,
+        domain_name=environment.get_domain_name(),
         audio_native_config=audio_native_config,
         audio_taps_dir=audio_taps_dir,
     )

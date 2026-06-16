@@ -5,6 +5,7 @@ Each domain has its own MCP server with isolated tools, accessible at:
     - http://localhost:8000/mcp/airline  (14 airline tools)
     - http://localhost:8000/mcp/retail   (16 retail tools)
     - http://localhost:8000/mcp/telecom  (13 telecom tools)
+    - http://localhost:8000/mcp/legal    (13 legal tools)
 
 Usage:
     # Run unified HTTP server
@@ -23,6 +24,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from tau2.mcp.airline_server import create_airline_mcp_server
+from tau2.mcp.legal_server import create_legal_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
 from tau2.mcp.telecom_server import create_telecom_mcp_server
 
@@ -31,19 +33,22 @@ def create_unified_http_app(
     airline_db_path: str | Path | None = None,
     retail_db_path: str | Path | None = None,
     telecom_db_path: str | Path | None = None,
+    legal_db_path: str | Path | None = None,
 ) -> Starlette:
     """
-    Create a unified Starlette app with all three domain MCP servers.
+    Create a unified Starlette app with all domain MCP servers.
 
     Each domain is mounted at its own path:
     - /mcp/airline
     - /mcp/retail
     - /mcp/telecom
+    - /mcp/legal
 
     Args:
         airline_db_path: Path to airline database (optional)
         retail_db_path: Path to retail database (optional)
         telecom_db_path: Path to telecom database (optional)
+        legal_db_path: Path to legal database (optional)
 
     Returns:
         Starlette application with all domains mounted
@@ -56,17 +61,20 @@ def create_unified_http_app(
     telecom_mcp = create_telecom_mcp_server(
         db_path=telecom_db_path, name="tau2-telecom"
     )
+    legal_mcp = create_legal_mcp_server(db_path=legal_db_path, name="tau2-legal")
 
     # Create HTTP apps for each domain with their specific paths
     airline_app = airline_mcp.http_app(path="/mcp/airline", transport="streamable-http")
     retail_app = retail_mcp.http_app(path="/mcp/retail", transport="streamable-http")
     telecom_app = telecom_mcp.http_app(path="/mcp/telecom", transport="streamable-http")
+    legal_app = legal_mcp.http_app(path="/mcp/legal", transport="streamable-http")
 
     # Store references for lifespan management
     domain_apps = [
         ("airline", airline_app, airline_mcp),
         ("retail", retail_app, retail_mcp),
         ("telecom", telecom_app, telecom_mcp),
+        ("legal", legal_app, legal_mcp),
     ]
 
     # Create combined lifespan that initializes all MCP servers
@@ -78,7 +86,8 @@ def create_unified_http_app(
         async with airline_app.lifespan(airline_app):
             async with retail_app.lifespan(retail_app):
                 async with telecom_app.lifespan(telecom_app):
-                    yield
+                    async with legal_app.lifespan(legal_app):
+                        yield
 
     # Info endpoint
     async def info(request):
@@ -87,6 +96,7 @@ def create_unified_http_app(
         airline_tools = await airline_mcp.list_tools()
         retail_tools = await retail_mcp.list_tools()
         telecom_tools = await telecom_mcp.list_tools()
+        legal_tools = await legal_mcp.list_tools()
         return JSONResponse(
             {
                 "name": "tau2-bench-mcp",
@@ -106,6 +116,11 @@ def create_unified_http_app(
                         "url": "/mcp/telecom",
                         "tools": len(telecom_tools),
                         "description": "Customer accounts, billing, line management",
+                    },
+                    "legal": {
+                        "url": "/mcp/legal",
+                        "tools": len(legal_tools),
+                        "description": "NSW boutique-firm client intake (LPUL)",
                     },
                 },
             }
@@ -177,6 +192,13 @@ Examples:
         help="Path to telecom database (optional)",
     )
 
+    parser.add_argument(
+        "--legal-db-path",
+        type=str,
+        default=None,
+        help="Path to legal database (optional)",
+    )
+
     args = parser.parse_args()
 
     # Create the unified app
@@ -184,16 +206,18 @@ Examples:
         airline_db_path=args.airline_db_path,
         retail_db_path=args.retail_db_path,
         telecom_db_path=args.telecom_db_path,
+        legal_db_path=args.legal_db_path,
     )
 
     print(f"""
 ╔══════════════════════════════════════════════════════════════════
-║                    Tau2-Bench Unified MCP Server                 
+║                    Tau2-Bench Unified MCP Server
 ╠══════════════════════════════════════════════════════════════════
 ║  MCP Endpoints:
 ║    • Airline:  http://{args.host}:{args.port}/mcp/airline
 ║    • Retail:   http://{args.host}:{args.port}/mcp/retail
 ║    • Telecom:  http://{args.host}:{args.port}/mcp/telecom
+║    • Legal:    http://{args.host}:{args.port}/mcp/legal
 ║
 ║  Info:         http://{args.host}:{args.port}/info
 ╚══════════════════════════════════════════════════════════════════

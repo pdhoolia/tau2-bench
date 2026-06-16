@@ -8,7 +8,8 @@
 # Usage:
 #   harnesses/run_eval.sh <domain> <smoke|full> [baseline|harness|both]
 #
-#   <domain>          retail | airline | telecom | mock | ...
+#   <domain>          retail | legal | airline | telecom | mock | ...
+#                     (harness plugins exist for: retail, legal)
 #   <smoke|full>      smoke = 1 task (fast wiring check); full = the whole split
 #   [target]          which agent(s) to run (default: both)
 #
@@ -45,9 +46,11 @@ AGENT_MODEL="${TAU2_AGENT_MODEL:-aws/claude-sonnet-4-5}"
 USER_MODEL="${TAU2_USER_MODEL:-aws/claude-sonnet-4-5}"
 export TAU2_AGENT_MODEL="$AGENT_MODEL"  # so preflight heredocs see the same value
 
-# claude_harness is retail-only today (hardcoded retail server + plugin).
-if [[ "$TARGET" != baseline && "$DOMAIN" != retail ]]; then
-  echo ">> claude_harness is retail-only today; running baseline only for '$DOMAIN'."
+# claude_harness ships a domain harness for these domains today; others run
+# baseline-only until a harness plugin exists for them.
+HARNESS_DOMAINS=" retail legal "
+if [[ "$TARGET" != baseline && "$HARNESS_DOMAINS" != *" $DOMAIN "* ]]; then
+  echo ">> claude_harness has no harness for '$DOMAIN' yet; running baseline only."
   TARGET=baseline
 fi
 

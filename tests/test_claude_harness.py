@@ -192,6 +192,59 @@ def test_seed_retail_db_default_roundtrips(tmp_path):
     assert len(db.products) > 0
 
 
+def test_seed_legal_db_default_roundtrips(tmp_path):
+    from tau2.agent.claude_harness.task_db import seed_legal_db_for_task
+    from tau2.domains.legal.data_model import LegalDB
+
+    out = seed_legal_db_for_task(None, tmp_path / "db.json")
+    assert out.exists()
+    db = LegalDB.load(str(out))
+    assert len(db.practitioners) > 0
+    assert len(db.clients) > 0
+
+
+def test_seed_db_for_task_dispatches(tmp_path):
+    from tau2.agent.claude_harness.task_db import seed_db_for_task
+
+    retail_out = seed_db_for_task("retail", None, tmp_path / "retail.json")
+    legal_out = seed_db_for_task("legal", None, tmp_path / "legal.json")
+    assert retail_out.exists() and legal_out.exists()
+    with pytest.raises(ValueError, match="no DB seeder"):
+        seed_db_for_task("airline", None, tmp_path / "airline.json")
+
+
+# ---------------------------------------------------------------------------
+# domain-aware factory wiring
+# ---------------------------------------------------------------------------
+
+
+def test_factory_wires_legal_domain():
+    from tau2.agent.claude_harness.agent import create_claude_harness_agent
+
+    agent = create_claude_harness_agent(tools=[], domain_policy="", domain_name="legal")
+    assert agent.mcp_server_name == "tau2-legal"
+    runner = agent.runner
+    assert runner.server_module == "tau2.mcp.legal_server"
+    assert runner.mcp_server_name == "tau2-legal"
+    assert "legal-harness" in str(runner.plugin_dir)
+
+
+def test_factory_defaults_to_retail_domain():
+    from tau2.agent.claude_harness.agent import create_claude_harness_agent
+
+    agent = create_claude_harness_agent(tools=[], domain_policy="")
+    assert agent.mcp_server_name == "tau2-retail"
+    assert agent.runner.server_module == "tau2.mcp.retail_server"
+    assert "retail-harness" in str(agent.runner.plugin_dir)
+
+
+def test_factory_rejects_unsupported_domain():
+    from tau2.agent.claude_harness.agent import create_claude_harness_agent
+
+    with pytest.raises(ValueError, match="no harness configured"):
+        create_claude_harness_agent(tools=[], domain_policy="", domain_name="airline")
+
+
 # ---------------------------------------------------------------------------
 # registry wiring
 # ---------------------------------------------------------------------------

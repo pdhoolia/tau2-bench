@@ -24,6 +24,7 @@ from __future__ import annotations
 import os
 import tempfile
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Protocol
 
@@ -38,7 +39,7 @@ from tau2.data_model.message import (
     UserMessage,
 )
 
-DEFAULT_HARNESS_SYSTEM_PROMPT = (
+RETAIL_HARNESS_SYSTEM_PROMPT = (
     "You are the retail customer-service agent. Use the retail-harness skills, "
     "scripts, and tools to help the user according to policy. Authenticate the "
     "user before any account action, confirm every database write before making "
@@ -46,9 +47,66 @@ DEFAULT_HARNESS_SYSTEM_PROMPT = (
     "improvising policy."
 )
 
-# Repo-relative default location of the retail harness plugin.
+LEGAL_HARNESS_SYSTEM_PROMPT = (
+    "You are the client-intake assistant at a boutique NSW law firm. Use the "
+    "legal-harness skills, scripts, and tools to open new matters correctly under "
+    "the Legal Profession Uniform Law. Always run the conflict check first, follow "
+    "the intake steps in order, compute costs-disclosure tiers with the provided "
+    "script rather than in your head, and rely on the deterministic guardrails "
+    "rather than improvising policy. You are not a lawyer and must not give legal "
+    "advice or predict outcomes."
+)
+
+# Back-compat alias: the original retail-only constant name.
+DEFAULT_HARNESS_SYSTEM_PROMPT = RETAIL_HARNESS_SYSTEM_PROMPT
+
+# Repo-relative location of the harness plugins.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_DEFAULT_PLUGIN_DIR = _REPO_ROOT / "harnesses" / "plugins" / "retail-harness"
+_PLUGINS_DIR = _REPO_ROOT / "harnesses" / "plugins"
+
+
+@dataclass(frozen=True)
+class HarnessDomainConfig:
+    """Everything the claude_harness factory needs to drive one domain.
+
+    A domain becomes harness-runnable by adding an entry to ``HARNESS_DOMAINS``:
+    its MCP server module + name, its plugin directory, the default system
+    prompt, and the per-task DB seeder (resolved lazily from ``task_db``).
+    """
+
+    domain: str
+    mcp_server_name: str
+    server_module: str
+    plugin_dirname: str
+    system_prompt: str
+    seeder_name: str
+
+    @property
+    def plugin_dir(self) -> Path:
+        return _PLUGINS_DIR / self.plugin_dirname
+
+
+HARNESS_DOMAINS: dict[str, HarnessDomainConfig] = {
+    "retail": HarnessDomainConfig(
+        domain="retail",
+        mcp_server_name="tau2-retail",
+        server_module="tau2.mcp.retail_server",
+        plugin_dirname="retail-harness",
+        system_prompt=RETAIL_HARNESS_SYSTEM_PROMPT,
+        seeder_name="seed_retail_db_for_task",
+    ),
+    "legal": HarnessDomainConfig(
+        domain="legal",
+        mcp_server_name="tau2-legal",
+        server_module="tau2.mcp.legal_server",
+        plugin_dirname="legal-harness",
+        system_prompt=LEGAL_HARNESS_SYSTEM_PROMPT,
+        seeder_name="seed_legal_db_for_task",
+    ),
+}
+
+# Default location of the retail harness plugin (kept for back-compat / tests).
+_DEFAULT_PLUGIN_DIR = HARNESS_DOMAINS["retail"].plugin_dir
 
 
 class TurnRunner(Protocol):
@@ -174,44 +232,68 @@ class ClaudeHarnessAgent(HalfDuplexAgent[ClaudeHarnessAgentState]):
 # =============================================================================
 
 
-def _resolve_plugin_dir() -> str:
-    return os.environ.get("TAU2_RETAIL_HARNESS_PLUGIN_DIR", str(_DEFAULT_PLUGIN_DIR))
+def _resolve_config(domain_name: str) -> HarnessDomainConfig:
+    """Select the harness config for ``domain_name`` or fail with a clear error."""
+    try:
+        return HARNESS_DOMAINS[domain_name]
+    except KeyError:
+        raise ValueError(
+            f"claude_harness has no harness configured for domain "
+            f"{domain_name!r}. Supported domains: {sorted(HARNESS_DOMAINS)}."
+        )
+
+
+def _resolve_plugin_dir(config: HarnessDomainConfig) -> str:
+    """Plugin dir for a domain, honoring per-domain and generic env overrides.
+
+    Precedence: ``TAU2_<DOMAIN>_HARNESS_PLUGIN_DIR`` > ``TAU2_HARNESS_PLUGIN_DIR``
+    > the repo-relative default.
+    """
+    specific = os.environ.get(f"TAU2_{config.domain.upper()}_HARNESS_PLUGIN_DIR")
+    if specific:
+        return specific
+    return os.environ.get("TAU2_HARNESS_PLUGIN_DIR", str(config.plugin_dir))
 
 
 def create_claude_harness_agent(tools, domain_policy, **kwargs):
-    """Factory for the claude_harness (retail) agent.
+    """Factory for the claude_harness agent (retail and legal today).
 
-    Builds a per-simulation ClaudeCLIRunner that (a) seeds an isolated retail DB
-    for the task, (b) launches the retail MCP server against it, and (c) drives
-    `claude -p` with the retail-harness plugin. The agent-llm is forwarded as the
+    Builds a per-simulation ClaudeCLIRunner that (a) seeds an isolated domain DB
+    for the task, (b) launches the domain MCP server against it, and (c) drives
+    `claude -p` with the domain harness plugin. The domain is taken from
+    ``domain_name`` (passed by the runner from ``environment.domain_name``); it
+    defaults to ``retail`` for back-compat. The agent-llm is forwarded as the
     Claude CLI ``--model`` (use a Claude model id the CLI understands).
 
     Recognized llm_args overrides: ``mcp_server_name``, ``max_turns``,
     ``permission_mode``, ``append_system_prompt``, ``plugin_dir``, ``claude_bin``,
     ``extra_cli_args``.
     """
+    from tau2.agent.claude_harness import task_db
     from tau2.agent.claude_harness.cli_runner import ClaudeCLIRunner
-    from tau2.agent.claude_harness.task_db import seed_retail_db_for_task
 
     llm = kwargs.get("llm")
     llm_args = dict(kwargs.get("llm_args") or {})
     task = kwargs.get("task")
+    domain_name = kwargs.get("domain_name") or "retail"
 
-    mcp_server_name = llm_args.get("mcp_server_name", "tau2-retail")
-    plugin_dir = llm_args.get("plugin_dir", _resolve_plugin_dir())
+    config = _resolve_config(domain_name)
 
-    work_dir = Path(tempfile.mkdtemp(prefix="tau2_claude_harness_"))
-    db_path = seed_retail_db_for_task(task, work_dir / "db.json")
+    mcp_server_name = llm_args.get("mcp_server_name", config.mcp_server_name)
+    plugin_dir = llm_args.get("plugin_dir", _resolve_plugin_dir(config))
+
+    work_dir = Path(tempfile.mkdtemp(prefix=f"tau2_claude_harness_{config.domain}_"))
+    seeder = getattr(task_db, config.seeder_name)
+    db_path = seeder(task, work_dir / "db.json")
 
     runner = ClaudeCLIRunner(
         db_path=db_path,
         plugin_dir=plugin_dir,
         work_dir=work_dir,
         mcp_server_name=mcp_server_name,
+        server_module=config.server_module,
         model=llm,
-        append_system_prompt=llm_args.get(
-            "append_system_prompt", DEFAULT_HARNESS_SYSTEM_PROMPT
-        ),
+        append_system_prompt=llm_args.get("append_system_prompt", config.system_prompt),
         max_turns=int(llm_args.get("max_turns", 40)),
         permission_mode=llm_args.get("permission_mode", "bypassPermissions"),
         claude_bin=llm_args.get("claude_bin", "claude"),

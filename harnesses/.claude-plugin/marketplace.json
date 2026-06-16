@@ -13,6 +13,14 @@
       "version": "0.1.0",
       "category": "benchmark",
       "keywords": ["tau2-bench", "retail", "determinism", "harness", "customer-service"]
+    },
+    {
+      "name": "legal-harness",
+      "source": "./plugins/legal-harness",
+      "description": "Domain-specific harness for the tau2-bench legal domain (NSW boutique-firm client intake under the LPUL): per-step intake skills, a deterministic costs-disclosure / fee calculator, a pre-write guardrail hook for the fee and disclosure-threshold rules, an intake-auditor sub-agent, and the legal MCP tool connector.",
+      "version": "0.1.0",
+      "category": "benchmark",
+      "keywords": ["tau2-bench", "legal", "nsw", "determinism", "harness", "intake"]
     }
   ]
 }

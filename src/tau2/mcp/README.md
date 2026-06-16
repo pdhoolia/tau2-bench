@@ -9,6 +9,7 @@ FastMCP servers wrapping the Tau2-Bench domain tools for use with MCP-compatible
 | **Airline** | 14    | Flight booking, reservations, cancellations, modifications |
 | **Retail**  | 16    | E-commerce orders, returns, exchanges, user management     |
 | **Telecom** | 13    | Customer accounts, billing, line management, data usage    |
+| **Legal**   | 13    | NSW boutique-firm client intake (LPUL): conflicts, costs, matters |
 
 ## Installation
 
@@ -31,6 +32,7 @@ python -m tau2.mcp.unified_server --port 8000
 #   http://localhost:8000/mcp/airline
 #   http://localhost:8000/mcp/retail
 #   http://localhost:8000/mcp/telecom
+#   http://localhost:8000/mcp/legal
 #   http://localhost:8000/info  (server info)
 ```
 
@@ -50,11 +52,13 @@ python -m tau2.mcp
 python -m tau2.mcp --domain airline
 python -m tau2.mcp --domain retail
 python -m tau2.mcp --domain telecom
+python -m tau2.mcp --domain legal
 
 # Run single domain with HTTP (separate ports)
 python -m tau2.mcp --domain airline --transport http --port 8000
 python -m tau2.mcp --domain retail --transport http --port 8001
 python -m tau2.mcp --domain telecom --transport http --port 8002
+python -m tau2.mcp --domain legal --transport http --port 8003
 ```
 
 ### Individual Domain Servers
@@ -71,6 +75,10 @@ python -m tau2.mcp.retail_server --transport http --port 8001
 # Telecom
 python -m tau2.mcp.telecom_server
 python -m tau2.mcp.telecom_server --transport http --port 8002
+
+# Legal
+python -m tau2.mcp.legal_server
+python -m tau2.mcp.legal_server --transport http --port 8003
 ```
 
 ### Custom Database Path
@@ -111,6 +119,14 @@ Add to your Claude Desktop MCP config:
       "env": {
         "PYTHONPATH": "/path/to/tau2-bench/src"
       }
+    },
+    "tau2-legal": {
+      "command": "python",
+      "args": ["-m", "tau2.mcp", "--domain", "legal"],
+      "cwd": "/path/to/tau2-bench",
+      "env": {
+        "PYTHONPATH": "/path/to/tau2-bench/src"
+      }
     }
   }
 }
@@ -131,6 +147,7 @@ Connect using:
 - Airline: `http://localhost:8000/mcp/airline`
 - Retail: `http://localhost:8000/mcp/retail`
 - Telecom: `http://localhost:8000/mcp/telecom`
+- Legal: `http://localhost:8000/mcp/legal`
 
 **Option 2: Separate Servers**
 
@@ -226,6 +243,32 @@ Connect using:
 
 - `transfer_to_human_agents(summary)` - Transfer to human support
 
+### Legal Domain (13 tools)
+
+NSW boutique-firm client intake under the Legal Profession Uniform Law (LPUL).
+
+#### Read Tools
+
+- `list_practitioners()` - List practitioners and practising-certificate status
+- `get_practitioner(practitioner_id)` - Get a practitioner's details / PC status
+- `get_client(client_id)` - Get an existing client
+- `find_clients(name)` - Find clients by (partial) name; use before creating one
+- `get_matter(matter_id)` - Get a matter's details
+- `get_conflict_check(conflict_check_id)` - Get a previously run conflict check
+- `get_costs_agreement(costs_agreement_id)` - Get a costs agreement
+
+#### Write Tools
+
+- `run_conflict_check(prospective_client_name, opposing_parties)` - Run and record a conflict check (must be clear before opening a matter)
+- `create_client(name, client_type, email, phone, ...)` - Create a new client record
+- `verify_client_identity(client_id)` - Mark a client's identity verified
+- `create_costs_agreement(client_id, fee_type, estimated_total, ...)` - Create a costs agreement / disclosure
+- `open_matter(client_id, responsible_practitioner_id, matter_type, ...)` - Open a matter (enforces the intake preconditions)
+
+#### Utility Tools
+
+- `transfer_to_human(summary)` - Escalate the intake to a principal
+
 ## API Reference
 
 ### Programmatic Usage
@@ -233,6 +276,7 @@ Connect using:
 ```python
 from tau2.mcp import (
     create_airline_mcp_server,
+    create_legal_mcp_server,
     create_retail_mcp_server,
     create_telecom_mcp_server,
 )
@@ -241,6 +285,7 @@ from tau2.mcp import (
 airline_mcp = create_airline_mcp_server()
 retail_mcp = create_retail_mcp_server()
 telecom_mcp = create_telecom_mcp_server()
+legal_mcp = create_legal_mcp_server()
 
 # Create server with custom database
 airline_mcp = create_airline_mcp_server(db_path="/path/to/db.json")
