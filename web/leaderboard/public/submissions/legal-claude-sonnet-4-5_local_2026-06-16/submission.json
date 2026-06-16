@@ -1,0 +1,17 @@
+{
+  "model_name": "claude-sonnet-4-5 (legal, local)",
+  "model_organization": "local",
+  "submitting_organization": "local",
+  "submission_date": "2026-06-16",
+  "submission_type": "standard",
+  "is_new": true,
+  "trajectories_available": true,
+  "trajectory_files": {
+    "legal": "legal_results.json"
+  },
+  "methodology": {
+    "tau2_bench_version": "fork",
+    "user_simulator": "litellm_proxy/aws/claude-sonnet-4-5",
+    "notes": "Local sanity run of the legal domain (12 tasks, 1 trial). Agent + user-sim = aws/claude-sonnet-4-5 via the IBM LiteLLM proxy; judge = aws/claude-opus-4-8."
+  }
+}
