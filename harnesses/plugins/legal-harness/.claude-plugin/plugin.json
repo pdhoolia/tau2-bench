@@ -1,0 +1,11 @@
+{
+  "name": "legal-harness",
+  "displayName": "Legal Harness (tau2-bench)",
+  "version": "0.1.0",
+  "description": "Higher-order harness for the tau2-bench legal domain (NSW boutique-firm client intake under the Legal Profession Uniform Law). Decomposes legal/policy.md by altitude: the ordered intake procedure and its steps become progressively-disclosed skills, the costs-disclosure tier and fee-validation arithmetic becomes a deterministic script, the fee rules and disclosure-threshold invariants become a PreToolUse hook the agent cannot route around, and an intake-auditor sub-agent re-checks open-matter preconditions against live state. The domain tools are supplied by the fork's legal MCP server.",
+  "author": {
+    "name": "pdhoolia",
+    "email": "pdhoolia@gmail.com"
+  },
+  "keywords": ["tau2-bench", "legal", "nsw", "determinism", "harness"]
+}

@@ -208,9 +208,13 @@ Results land in `data/simulations/<domain>_<mode>_<agent>/`; review with `tau2 v
   call logs a benign `get_response_cost ... This model isn't mapped yet` **ERROR**.
   It's harmless (cost falls back to 0); use your gateway's own usage dashboard for
   spend. On full runs this line is noisy — filter it with `2>&1 | grep -v "isn't mapped yet"`.
-- **`claude_harness` is retail-only today** — it hardcodes the retail MCP server +
-  plugin. Airline/telecom generalize the same way (swap server module + plugin dir);
-  until then the script runs baseline-only for non-retail domains.
+- **`claude_harness` ships harnesses for `retail` and `legal` today.** The bridge
+  is domain-aware: it picks the MCP server module, plugin dir, and per-task DB
+  seeder from the domain under test (`HARNESS_DOMAINS` in
+  `src/tau2/agent/claude_harness/agent.py`). Airline/telecom generalize the same way
+  (add a config entry + a plugin dir); until then the script runs baseline-only for
+  those domains. To run the legal harness, swap `retail` → `legal` in the commands
+  above (and use a legal task split).
 - **Background model.** The claude CLI makes small/fast background calls; point
   `ANTHROPIC_SMALL_FAST_MODEL` at a gateway model (e.g. Haiku) or those calls fail.
 - **Step budget.** Replaying N tool calls costs ~N orchestrator steps; long harness

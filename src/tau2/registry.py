@@ -322,7 +322,7 @@ try:
         create_claude_harness_agent,
         "claude_harness",
         task_filter=lambda task: True,
-        metadata={"domains": ["retail"]},
+        metadata={"domains": ["retail", "legal"]},
     )
     registry.register_domain(mock_domain_get_environment, "mock")
     registry.register_tasks(mock_domain_get_tasks, "mock")

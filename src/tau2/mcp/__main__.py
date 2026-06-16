@@ -8,6 +8,7 @@ Usage:
     python -m tau2.mcp --domain airline
     python -m tau2.mcp --domain retail
     python -m tau2.mcp --domain telecom
+    python -m tau2.mcp --domain legal
 
     # Run with HTTP transport
     python -m tau2.mcp --domain airline --transport http --port 8000
@@ -19,6 +20,7 @@ Usage:
 import argparse
 
 from tau2.mcp.airline_server import create_airline_mcp_server
+from tau2.mcp.legal_server import create_legal_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
 from tau2.mcp.telecom_server import create_telecom_mcp_server
 
@@ -26,6 +28,7 @@ DOMAIN_FACTORIES = {
     "airline": create_airline_mcp_server,
     "retail": create_retail_mcp_server,
     "telecom": create_telecom_mcp_server,
+    "legal": create_legal_mcp_server,
 }
 
 
@@ -52,9 +55,9 @@ Examples:
 
     parser.add_argument(
         "--domain",
-        choices=["airline", "retail", "telecom"],
+        choices=["airline", "retail", "telecom", "legal"],
         default="airline",
-        help="Domain to run: airline, retail, or telecom (default: airline)",
+        help="Domain to run: airline, retail, telecom, or legal (default: airline)",
     )
 
     parser.add_argument(

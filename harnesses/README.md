@@ -12,17 +12,20 @@ around* — over the fork's existing [MCP tool servers](../src/tau2/mcp/).
 
 ## Status
 
-Incremental build. This first increment ships the marketplace plus **one** plugin:
+Incremental build. The marketplace currently ships **two** plugins:
 
 | Plugin           | Domain  | State                                                       |
 | ---------------- | ------- | ----------------------------------------------------------- |
 | `retail-harness` | retail  | Scaffold complete — skills, script, hook, sub-agent, MCP.   |
+| `legal-harness`  | legal   | Scaffold complete — skills, scripts, hook, sub-agent, MCP.  |
 | _airline_        | airline | Planned.                                                    |
 | _telecom_        | telecom | Planned.                                                    |
 
 The tau2 evaluation bridge (an `--agent claude_harness` wrapper that drives
 `claude -p` and reconciles MCP tool calls back into the tau2 trajectory) is now
-included — see [`src/tau2/agent/claude_harness/`](../src/tau2/agent/claude_harness).
+domain-aware — it picks the right MCP server, plugin, and per-task DB seeder from
+the domain under test (`retail` and `legal` today). See
+[`src/tau2/agent/claude_harness/`](../src/tau2/agent/claude_harness).
 To run an evaluation of a harness plugin (and its baseline) end-to-end, follow the
 **[evaluation playbook](playbook.md)** — preflight, smoke run, full run, and the
 `run_eval.sh` shortcut, with all models routed through a LiteLLM gateway.
@@ -33,7 +36,8 @@ To run an evaluation of a harness plugin (and its baseline) end-to-end, follow t
 harnesses/
 ├── .claude-plugin/marketplace.json     # this marketplace
 └── plugins/
-    └── retail-harness/                  # see plugins/retail-harness/README.md
+    ├── retail-harness/                  # see plugins/retail-harness/README.md
+    └── legal-harness/                   # see plugins/legal-harness/README.md
 ```
 
 ## Try it (manual, today)

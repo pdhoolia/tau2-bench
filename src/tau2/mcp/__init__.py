@@ -1,12 +1,14 @@
 """MCP servers for Tau2-Bench domains."""
 
 from tau2.mcp.airline_server import create_airline_mcp_server
+from tau2.mcp.legal_server import create_legal_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
 from tau2.mcp.telecom_server import create_telecom_mcp_server
 from tau2.mcp.unified_server import create_unified_http_app
 
 __all__ = [
     "create_airline_mcp_server",
+    "create_legal_mcp_server",
     "create_retail_mcp_server",
     "create_telecom_mcp_server",
     "create_unified_http_app",
