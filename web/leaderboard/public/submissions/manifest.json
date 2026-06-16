@@ -1,5 +1,7 @@
 {
   "submissions": [
+    "legal-baseline-sonnet-4-5_local_2026-06-17",
+    "legal-harness-sonnet-4-5_local_2026-06-17",
     "claude-opus-4-5_sierra_2026-02-26",
     "claude-sonnet-4-5_sierra_2026-02-26",
     "gpt-5-2_sierra_2026-02-26",

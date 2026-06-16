@@ -42,7 +42,10 @@ Call `create_costs_agreement(client_id, fee_type, estimated_total, ...)`:
   disclosure tier is recorded automatically). The matter cannot be opened above
   $3,000 without a signed, full agreement.
 - **$750-$3,000:** create the agreement (short-form tier recorded automatically).
-- **Below $750:** an agreement is optional; create one only if asked.
+- **Below $750:** do **not** create a costs agreement and do **not** attach one to
+  the matter — open the matter without one. Only create an agreement here if a
+  staff member explicitly asks for one. Do not volunteer an unrequested agreement:
+  it adds a record the intake should not have.
 
 ## Fees — what is and isn't allowed
 

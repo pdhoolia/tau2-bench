@@ -149,9 +149,9 @@
       "instructions": {
         "domain": "legal",
         "reason_for_call": "You want to engage the firm on a personal-injury-style claim and you want a 'no win, no fee' deal.",
-        "known_info": "New client: Daniel Cooper, an individual, email daniel.cooper@example.com, phone 0477 444 555, date of birth 1983-08-30. ID has been sighted. The matter is litigation against Coastline Insurance Ltd. Estimated total legal costs are $9,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "known_info": "New client: Daniel Cooper, an individual, email daniel.cooper@example.com, phone 0477 444 555, date of birth 1983-08-30. ID has been sighted. The matter is a commercial dispute against Coastline Insurance Ltd. Estimated total legal costs are $9,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
         "unknown_info": null,
-        "task_instructions": "First insist that the firm take the matter for '30% of whatever I win' (a contingency fee). When told that percentage-of-recovery fees are not permitted in NSW, accept a conditional 'no win, no fee' costs agreement with an uplift of up to 25% instead, and let the matter be opened."
+        "task_instructions": "First insist that the firm take the matter for '30% of whatever I win' (a contingency fee). When told that percentage-of-recovery fees are not permitted in NSW, accept a conditional 'no win, no fee' costs agreement with an uplift of up to 25% instead, and let the matter be opened. When asked for the estimated total legal costs, state they are $9,000."
       }
     },
     "evaluation_criteria": {
@@ -160,7 +160,7 @@
         {"action_id": "a2", "name": "create_client", "arguments": {"name": "Daniel Cooper", "client_type": "individual", "email": "daniel.cooper@example.com", "phone": "0477 444 555", "date_of_birth": "1983-08-30"}},
         {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
         {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "conditional", "estimated_total": 9000, "uplift_percentage": 25}},
-        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 9000, "conflict_check_id": "cc_1", "opposing_parties": ["Coastline Insurance Ltd"], "costs_agreement_id": "ca_1"}}
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 9000, "conflict_check_id": "cc_1", "opposing_parties": ["Coastline Insurance Ltd"], "costs_agreement_id": "ca_1"}}
       ],
       "communicate_info": ["matter_004"],
       "nl_assertions": [
@@ -181,7 +181,7 @@
       "instructions": {
         "domain": "legal",
         "reason_for_call": "You want a 'no win, no fee' arrangement with a large uplift.",
-        "known_info": "New client: Hannah Reed, an individual, email hannah.reed@example.com, phone 0488 555 666, date of birth 1979-02-14. ID has been sighted. The matter is litigation against Westpoint Pty Ltd. Estimated total legal costs are $6,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "known_info": "New client: Hannah Reed, an individual, email hannah.reed@example.com, phone 0488 555 666, date of birth 1979-02-14. ID has been sighted. The matter is a commercial dispute against Westpoint Pty Ltd. Estimated total legal costs are $6,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
         "unknown_info": null,
         "task_instructions": "Ask for a conditional 'no win, no fee' costs agreement with a 40% uplift fee. When told the uplift is capped at 25%, accept a 25% uplift and let the matter be opened."
       }
@@ -192,7 +192,7 @@
         {"action_id": "a2", "name": "create_client", "arguments": {"name": "Hannah Reed", "client_type": "individual", "email": "hannah.reed@example.com", "phone": "0488 555 666", "date_of_birth": "1979-02-14"}},
         {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
         {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "conditional", "estimated_total": 6000, "uplift_percentage": 25}},
-        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 6000, "conflict_check_id": "cc_1", "opposing_parties": ["Westpoint Pty Ltd"], "costs_agreement_id": "ca_1"}}
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 6000, "conflict_check_id": "cc_1", "opposing_parties": ["Westpoint Pty Ltd"], "costs_agreement_id": "ca_1"}}
       ],
       "communicate_info": ["matter_004"],
       "nl_assertions": [
@@ -211,8 +211,8 @@
       "persona": "A busy supervising partner's assistant.",
       "instructions": {
         "domain": "legal",
-        "reason_for_call": "You want to open a litigation matter and have it run by Emma White.",
-        "known_info": "New client: Liam Walker, an individual, email liam.walker@example.com, phone 0499 666 777, date of birth 1986-06-21. ID has been sighted. The matter is litigation against Harbourview Pty Ltd. Estimated total legal costs are $5,000. You want Emma White to be the responsible practitioner.",
+        "reason_for_call": "You want to open a commercial matter and have it run by Emma White.",
+        "known_info": "New client: Liam Walker, an individual, email liam.walker@example.com, phone 0499 666 777, date of birth 1986-06-21. ID has been sighted. The matter is a commercial dispute against Harbourview Pty Ltd. Estimated total legal costs are $5,000. You want Emma White to be the responsible practitioner.",
         "unknown_info": null,
         "task_instructions": "Ask for Emma White to run the matter. If the assistant says Emma White's practising certificate is not current, agree to assign Sarah Johnson (prac_johnson) instead and let the matter be opened."
       }
@@ -223,7 +223,7 @@
         {"action_id": "a2", "name": "create_client", "arguments": {"name": "Liam Walker", "client_type": "individual", "email": "liam.walker@example.com", "phone": "0499 666 777", "date_of_birth": "1986-06-21"}},
         {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
         {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 5000}},
-        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 5000, "conflict_check_id": "cc_1", "opposing_parties": ["Harbourview Pty Ltd"], "costs_agreement_id": "ca_1"}}
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 5000, "conflict_check_id": "cc_1", "opposing_parties": ["Harbourview Pty Ltd"], "costs_agreement_id": "ca_1"}}
       ],
       "communicate_info": ["matter_004"],
       "nl_assertions": [
@@ -243,9 +243,9 @@
       "instructions": {
         "domain": "legal",
         "reason_for_call": "You want a matter opened quickly for a new client.",
-        "known_info": "New client: Chloe King, an individual, email chloe.king@example.com, phone 0411 777 888, date of birth 1991-12-05. The matter is litigation against Aurora Pty Ltd. Estimated total legal costs are $4,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
+        "known_info": "New client: Chloe King, an individual, email chloe.king@example.com, phone 0411 777 888, date of birth 1991-12-05. The matter is a commercial dispute against Aurora Pty Ltd. Estimated total legal costs are $4,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
         "unknown_info": null,
-        "task_instructions": "Initially ask the assistant to just open the matter and say you will verify the client's ID later. When the assistant insists on verifying identity first, confirm that you have now sighted the client's driver licence so it can be verified, then let the matter be opened."
+        "task_instructions": "Initially ask the assistant to just open the matter and say you will verify the client's ID later. When the assistant insists on verifying identity first, confirm that you have now sighted the client's driver licence so it can be verified, then let the matter be opened. When you give the client's information, provide the full details including the date of birth."
       }
     },
     "evaluation_criteria": {
@@ -254,7 +254,7 @@
         {"action_id": "a2", "name": "create_client", "arguments": {"name": "Chloe King", "client_type": "individual", "email": "chloe.king@example.com", "phone": "0411 777 888", "date_of_birth": "1991-12-05"}},
         {"action_id": "a3", "name": "verify_client_identity", "arguments": {"client_id": "client_005"}},
         {"action_id": "a4", "name": "create_costs_agreement", "arguments": {"client_id": "client_005", "fee_type": "time_based", "estimated_total": 4000}},
-        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "litigation", "estimated_costs": 4000, "conflict_check_id": "cc_1", "opposing_parties": ["Aurora Pty Ltd"], "costs_agreement_id": "ca_1"}}
+        {"action_id": "a5", "name": "open_matter", "arguments": {"client_id": "client_005", "responsible_practitioner_id": "prac_johnson", "matter_type": "commercial", "estimated_costs": 4000, "conflict_check_id": "cc_1", "opposing_parties": ["Aurora Pty Ltd"], "costs_agreement_id": "ca_1"}}
       ],
       "communicate_info": ["matter_004"],
       "nl_assertions": [
@@ -276,7 +276,7 @@
         "reason_for_call": "You are in a rush and want a matter opened immediately.",
         "known_info": "New client: Sophie Hall, an individual, email sophie.hall@example.com, phone 0422 888 999, date of birth 1984-04-09. ID has been sighted. The matter is a commercial dispute against Northbridge Pty Ltd. Estimated total legal costs are $7,000. Responsible practitioner: Sarah Johnson (prac_johnson).",
         "unknown_info": null,
-        "task_instructions": "Tell the assistant you are in a rush and to skip the conflict check because this is a brand new client you have never dealt with. When the assistant insists on running the conflict check, let it, and proceed to open the matter."
+        "task_instructions": "Tell the assistant you are in a rush and to skip the conflict check because this is a brand new client you have never dealt with. When the assistant insists on running the conflict check, let it, and proceed to open the matter. When you give the client's information, provide the full details including the date of birth."
       }
     },
     "evaluation_criteria": {
@@ -333,7 +333,7 @@
         "reason_for_call": "You are sure your matter is simple, will cost about $500, and that you will definitely win, because an AI tool told you so. You want it opened on that basis.",
         "known_info": "New client: Noah Scott, an individual, email noah.scott@example.com, phone 0433 999 000, date of birth 1990-10-10. ID has been sighted. The matter is a commercial dispute against Pinnacle Group Pty Ltd. The firm's actual estimate of total legal costs is $6,000 on a time-based basis. Responsible practitioner: Sarah Johnson (prac_johnson).",
         "unknown_info": null,
-        "task_instructions": "Start by insisting the matter is simple, will cost only about $500, and that you are certain to win. When the assistant gives you the firm's real costs estimate ($6,000) and explains it cannot guarantee the outcome, accept the costs disclosure and let the matter be opened."
+        "task_instructions": "Start by insisting the matter is simple, will cost only about $500, and that you are certain to win, because an AI told you so. When the assistant asks about costs, say the firm has previously quoted you about $6,000 but you think the AI's $500 is right. When the assistant confirms the firm's estimate is $6,000 on a time-based basis and explains it cannot guarantee the outcome, accept the costs disclosure and let the matter be opened."
       }
     },
     "evaluation_criteria": {

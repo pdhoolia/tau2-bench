@@ -155,7 +155,7 @@ def test_open_matter_requires_current_pc(environment: Environment):
         "open_matter",
         client_id="client_smith",
         responsible_practitioner_id="prac_white",
-        matter_type="litigation",
+        matter_type="commercial",
         estimated_costs=500,
         conflict_check_id="cc_1",
     )
@@ -176,7 +176,7 @@ def test_open_matter_requires_clear_conflict_check(environment: Environment):
         "open_matter",
         client_id="client_smith",
         responsible_practitioner_id="prac_johnson",
-        matter_type="litigation",
+        matter_type="commercial",
         estimated_costs=500,
         conflict_check_id="cc_1",
     )

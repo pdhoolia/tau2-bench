@@ -112,6 +112,7 @@ def parse_stream_json(stdout: str) -> ParsedTurn:
     """
     turn = ParsedTurn()
     last_assistant_text = ""
+    denied_ids: set[str] = set()
 
     for event in _iter_json_events(stdout):
         etype = event.get("type")
@@ -120,6 +121,19 @@ def parse_stream_json(stdout: str) -> ParsedTurn:
         sid = event.get("session_id")
         if sid:
             turn.session_id = sid
+
+        # A PreToolUse hook (or the permission system) may DENY a tool call: the
+        # model still EMITTED the tool_use, but it never executed against Claude's
+        # environment. Such denials are reported in ``permission_denials`` (typically
+        # on the terminal ``result`` event). We collect their ids so we do not replay
+        # into tau2 a call that Claude's own guardrail blocked -- otherwise a hook
+        # deny that triggers a model retry double-executes (e.g. duplicate records)
+        # in the scored DB, which has no hook. See parse filter below.
+        denials = event.get("permission_denials")
+        if isinstance(denials, list):
+            for d in denials:
+                if isinstance(d, dict) and d.get("tool_use_id"):
+                    denied_ids.add(d["tool_use_id"])
 
         if etype == "assistant":
             msg = event.get("message", event)
@@ -138,6 +152,15 @@ def parse_stream_json(stdout: str) -> ParsedTurn:
             )
             turn.is_error = bool(event.get("is_error", False))
             turn.num_turns = event.get("num_turns")
+
+    if denied_ids:
+        kept = [tc for tc in turn.tool_calls if tc.id not in denied_ids]
+        if len(kept) != len(turn.tool_calls):
+            logger.debug(
+                f"Dropping {len(turn.tool_calls) - len(kept)} hook-denied tool "
+                f"call(s) from replay (denied ids: {sorted(denied_ids)})"
+            )
+        turn.tool_calls = kept
 
     if not turn.final_text:
         turn.final_text = last_assistant_text

@@ -63,6 +63,33 @@ def test_parse_stream_json_orders_and_extracts():
     assert turn.is_error is False
 
 
+_STREAM_WITH_DENIAL = "\n".join(
+    [
+        '{"type":"system","subtype":"init","session_id":"s2"}',
+        '{"type":"assistant","message":{"id":"m1","content":['
+        '{"type":"tool_use","id":"d1","name":"mcp__tau2-legal__create_client",'
+        '"input":{"name":"Sophie Hall","date_of_birth":"1984-04-09"}}]},'
+        '"session_id":"s2"}',
+        '{"type":"assistant","message":{"id":"m2","content":['
+        '{"type":"tool_use","id":"k1","name":"mcp__tau2-legal__create_client",'
+        '"input":{"name":"Sophie Hall"}}]},"session_id":"s2"}',
+        '{"type":"result","subtype":"success","is_error":false,'
+        '"result":"done","session_id":"s2",'
+        '"permission_denials":[{"tool_name":"mcp__tau2-legal__create_client",'
+        '"tool_use_id":"d1"}]}',
+    ]
+)
+
+
+def test_parse_stream_json_drops_hook_denied_tool_calls():
+    # A tool call DENIED by a PreToolUse hook (listed in permission_denials) never
+    # executed on Claude's side, so it must not be replayed into the scored env --
+    # otherwise a deny+retry double-executes (e.g. duplicate create_client).
+    turn = parse_stream_json(_STREAM_WITH_DENIAL)
+    ids = [c.id for c in turn.tool_calls]
+    assert ids == ["k1"]  # the denied "d1" is filtered out
+
+
 def test_parse_stream_json_falls_back_to_last_assistant_text():
     stream = (
         '{"type":"assistant","message":{"content":'

@@ -33,12 +33,33 @@ Consider running the `/legal-harness:intake-audit` command (the `intake-auditor`
 sub-agent) for an independent read-only re-check of these preconditions before the
 write.
 
+## Choosing `matter_type`
+
+`matter_type` is the **area of law** — `commercial`, `family`, `conveyancing`,
+`estates`, or `employment`. It is **not** a dispute posture: whether a matter is
+contentious / heading to court does not change its area (a commercial dispute is
+still `commercial`; a family dispute is still `family`).
+
+Use the area the client/staff stated and map their words to the closest value —
+**default to their categorization**:
+
+- "commercial dispute", "shareholder dispute", "contract dispute" → `commercial`
+- "family matter", "divorce", "parenting" → `family`
+- "conveyancing", "property purchase/sale" → `conveyancing`
+- "estate", "probate", "will" → `estates`
+- "employment", "unfair dismissal" → `employment`
+
+Do **not** reclassify by posture: the presence of an opposing party, a "dispute",
+or pending proceedings does **not** change the area of law. If the area is
+genuinely unclear, **confirm with the requester** rather than guessing.
+
 ## Open it
 
 2. **Call `open_matter`** with: `client_id`, `responsible_practitioner_id`,
-   `matter_type` (`commercial`, `litigation`, `family`, `conveyancing`, `estates`,
-   or `employment`), `estimated_costs`, the cleared `conflict_check_id`,
-   `opposing_parties`, and (where required) the `costs_agreement_id`.
+   `matter_type` (`commercial`, `family`, `conveyancing`, `estates`, or
+   `employment`) — the area of law, chosen per "Choosing `matter_type`" above,
+   `estimated_costs`, the cleared `conflict_check_id`, `opposing_parties`, and
+   (where required) the `costs_agreement_id`.
 
 ## Guardrail
 

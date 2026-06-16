@@ -97,6 +97,10 @@ This shows the actual agent ↔ user conversations, tool calls, and per-task rew
 thing the other two views do **not** show. See [evaluation.md](evaluation.md) for how
 rewards are computed.
 
+> For the same trajectories in a **browser** (the React TrajectoryVisualizer at
+> `http://localhost:5173`), including how to turn a run into a submission the web app
+> can load, see the [legal-domain web-visualizer playbook](legal-domain-playbook.md).
+
 ---
 
 ## Shutting down

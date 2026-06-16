@@ -85,7 +85,8 @@ const TrajectoryVisualizer = () => {
     { id: 'airline', label: 'Airline', icon: '✈️', color: '#3b82f6' },
     { id: 'retail', label: 'Retail', icon: '🛍️', color: '#8b5cf6' },
     { id: 'telecom', label: 'Telecom', icon: '📱', color: '#059669' },
-    { id: 'banking_knowledge', label: 'Banking', icon: '🏦', color: '#d97706' }
+    { id: 'banking_knowledge', label: 'Banking', icon: '🏦', color: '#d97706' },
+    { id: 'legal', label: 'Legal', icon: '⚖️', color: '#b45309' }
   ]
 
   // --- Parse URL params for deep linking ---

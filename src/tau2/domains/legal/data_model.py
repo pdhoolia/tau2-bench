@@ -21,9 +21,11 @@ MatterStatus = Literal["prospective", "open", "declined", "closed"]
 
 # Controlled vocabulary for the area of law. Kept as an enum so the agent
 # selects a known token (and the database stays deterministic for grading).
+# NOTE: "litigation" is deliberately absent — it is a dispute posture, not an
+# area of law (a commercial/family/employment matter can each be litigious), so
+# it does not belong in a mutually-exclusive area-of-law enum.
 MatterType = Literal[
     "commercial",
-    "litigation",
     "family",
     "conveyancing",
     "estates",
@@ -139,7 +141,7 @@ class Matter(BaseModel):
         description="Practitioner with day-to-day responsibility for the matter."
     )
     matter_type: MatterType = Field(
-        description="Area of law: 'commercial', 'litigation', 'family', 'conveyancing', 'estates', or 'employment'."
+        description="Area of law: 'commercial', 'family', 'conveyancing', 'estates', or 'employment'."
     )
     description: Optional[str] = Field(
         default=None,

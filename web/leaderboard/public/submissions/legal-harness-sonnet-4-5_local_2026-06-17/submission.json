@@ -1,0 +1,17 @@
+{
+  "model_name": "claude-sonnet-4-5 (legal-harness)",
+  "model_organization": "local",
+  "submitting_organization": "local",
+  "submission_date": "2026-06-17",
+  "submission_type": "custom",
+  "is_new": true,
+  "trajectories_available": true,
+  "trajectory_files": {
+    "legal": "legal_results.json"
+  },
+  "methodology": {
+    "tau2_bench_version": "fork",
+    "user_simulator": "litellm_proxy/aws/claude-sonnet-4-5",
+    "notes": "Higher-order legal-harness Claude plugin via --agent claude_harness (Architecture B: skills + scripts + PreToolUse provenance/guardrail hooks over the legal MCP server). Agent base model = aws/claude-sonnet-4-5 (Anthropic /v1/messages via the IBM LiteLLM proxy); user-sim = aws/claude-sonnet-4-5; judge = aws/claude-opus-4-8. Single trial; 12/12 passing. submission_type is 'custom' because the agent scaffold is non-standard."
+  }
+}
