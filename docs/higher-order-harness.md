@@ -102,10 +102,15 @@ a freshly-replayed golden — dropping "double execution", while golden construc
   per instance, MCP tools at `/mcp/<domain>` plus admin `/admin/{reset,db_hash,info}`. **Concurrency:
   one server per parallel lane, never a shared central DB** — proven isolated by
   `tests/test_eval_control_server.py`. Independently useful; also speeds the current CLI path.
-- **Phase 2 — `tau2-eval` plugin, single task.** `/tau2-eval legal intake_happy_path`: opening
-  message → Stop-hook user-sim loop → terminal `evaluate_simulation`. Reuse tau2 Python throughout.
+- **Phase 2 — `tau2-eval` plugin, single task.** ✅ Built and unit-tested end to end:
+  `eval_insitu.{usersim,transcript,score,hook_logic,model_gateway,run_insitu}` +
+  `harnesses/plugins/tau2-eval` (Stop-hook user-sim). Scoring delegates to
+  `evaluate_simulation` (parity by reuse) — golden legal trajectories score 1.0, broken ones
+  <1.0. **Live smoke** ([`spikes/mcp-control-smoke/`](../spikes/mcp-control-smoke/)) confirms
+  `claude` invokes our eval-control MCP tools under root via the settings allowlist. Remaining
+  for a live multi-turn run: a reachable user-sim model endpoint.
 - **Phase 3 — Parity gate.** Run the legal 12 tasks in-situ vs `tau2 run`; require matching rewards.
-  Credibility checkpoint.
+  Credibility checkpoint. Needs the user-sim endpoint (local MLX / proxy / cloud).
 - **Phase 4 — Generalize + product.** Domain-agnostic task loader, multi-task/multi-trial runner,
   results report; package for the marketplace alongside the existing `tau2-harnesses` entry.
 - **Phase 5 (strategic) — Synthetic train/validate.** Wire Agent Tune task generation + a frozen
