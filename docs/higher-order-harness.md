@@ -113,12 +113,17 @@ a freshly-replayed golden — dropping "double execution", while golden construc
   in-situ (agent + `claude_cli` user-sim + eval-control server) and scores **reward 1.0** via the
   canonical evaluator. Remaining: sweep all 12 legal tasks in-situ and require they match `tau2 run`
   (ideally on the local MLX user-sim).
-- **Phase 4 — Generalize + product.** Domain-agnostic task loader, multi-task/multi-trial runner,
-  results report; package for the marketplace alongside the existing `tau2-harnesses` entry.
+- **Phase 4 — Generalize + product.** 🟡 In progress: multi-task/multi-trial **suite runner**
+  (`eval_insitu.suite`, concurrency-safe lanes) + `preflight` + the MLX benchmark playbook
+  ([`harnesses/insitu-playbook.md`](../harnesses/insitu-playbook.md)). Remaining: scripted
+  in-situ-vs-canonical parity diff, domain-agnostic task loader, marketplace packaging.
 - **Phase 5 (strategic) — Synthetic train/validate.** Wire Agent Tune task generation + a frozen
   validate split, enabling in-situ iterative harness improvement.
 
 ## 7. Model gateway (local MLX user-sim)
+
+> **Setup runbook:** [`mlx-user-sim-setup.md`](mlx-user-sim-setup.md) — install, model
+> choice for 64 GB, serve, configure, verify (`preflight`), run. This section is the design.
 
 The user-sim and judge are cost/latency-sensitive and a strong fit for **local
 inference** — a Qwen model (e.g. 8-bit) served on a 64 GB Apple-Silicon machine via an
