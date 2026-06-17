@@ -109,10 +109,12 @@ a freshly-replayed golden — dropping "double execution", while golden construc
   <1.0. **Live smoke** ([`spikes/mcp-control-smoke/`](../spikes/mcp-control-smoke/)) confirms
   `claude` invokes our eval-control MCP tools under root via the settings allowlist. Remaining
   for a live multi-turn run: a reachable user-sim model endpoint.
-- **Phase 3 — Parity gate.** 🟡 First live point landed: `legal intake_happy_path` runs fully
-  in-situ (agent + `claude_cli` user-sim + eval-control server) and scores **reward 1.0** via the
-  canonical evaluator. Remaining: sweep all 12 legal tasks in-situ and require they match `tau2 run`
-  (ideally on the local MLX user-sim).
+- **Phase 3 — Parity gate.** 🟡 Live points landed. `legal intake_happy_path` scores **reward
+  1.0** in-situ; a full 12-task `claude_cli`-user-sim sweep scored **9/12** end-to-end (loop +
+  concurrency + scorer validated; the 3 misses are genuine agent-decision diffs, not bugs — see
+  [`harnesses/docs/legal-insitu-validation-2026-06-17.md`](../harnesses/docs/legal-insitu-validation-2026-06-17.md)).
+  Remaining: a true parity sweep with the agent pinned to the baseline model + the canonical/MLX
+  user-sim, required to match `tau2 run`.
 - **Phase 4 — Generalize + product.** 🟡 In progress: multi-task/multi-trial **suite runner**
   (`eval_insitu.suite`, concurrency-safe lanes) + `preflight` + the MLX benchmark playbook
   ([`harnesses/insitu-playbook.md`](../harnesses/insitu-playbook.md)). Remaining: scripted
