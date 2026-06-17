@@ -29,6 +29,7 @@ OpenAI-compatible ``/v1``; ``provider=mlx`` targets it via LiteLLM's ``openai/``
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
 
@@ -109,5 +110,17 @@ def resolve_model(
         llm_args["api_base"] = api_base
     if api_key:
         llm_args["api_key"] = api_key
+
+    # Optional passthrough to litellm.completion (and thus the served model). These let a
+    # local server be tuned without code: e.g. a completion-token cap, or provider-specific
+    # request body fields. A reasoning model (e.g. Qwen3) served as a user-sim needs its
+    # thinking disabled, else it spends the token budget on <think> and returns empty
+    # content: TAU2_<ROLE>_EXTRA_BODY='{"chat_template_kwargs": {"enable_thinking": false}}'.
+    max_tokens = _env(role, "MAX_TOKENS")
+    if max_tokens:
+        llm_args["max_tokens"] = int(max_tokens)
+    extra_body = _env(role, "EXTRA_BODY")
+    if extra_body:
+        llm_args["extra_body"] = json.loads(extra_body)
 
     return ModelSpec(model=model, llm_args=llm_args, backend=backend)
