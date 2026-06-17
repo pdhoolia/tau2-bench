@@ -102,18 +102,39 @@ def _write_mcp_config(path: Path, server_name: str, mcp_url: str) -> None:
     )
 
 
-def _write_settings(path: Path) -> None:
-    # The tau2-eval plugin already wires the Stop hook; settings allowlists the domain
-    # MCP tools so a non-interactive run does not stall on permission prompts.
-    path.write_text(
-        json.dumps(
-            {"permissions": {"allow": ["mcp__*", "Bash", "Read", "Skill"]}}, indent=2
-        )
-    )
+def _domain_tool_permissions(domain: str, server_name: str) -> list[str]:
+    """Full ``mcp__<server>__<tool>`` permission entries for every domain tool.
+
+    Enumerating exact names is required: a non-interactive `claude -p` denies unlisted
+    tools, and glob forms like ``mcp__*`` are not honored as allow rules (observed:
+    denials leak permission-stub tool results into the trajectory and break scoring).
+    """
+    from tau2.agent.claude_harness.task_db import build_task_db
+    from tau2.mcp.eval_control_server import _domain_toolkit_class
+
+    toolkit = _domain_toolkit_class(domain)(build_task_db(domain, None))
+    return [f"mcp__{server_name}__{name}" for name in toolkit.tools]
 
 
-def _start_control_lane(domain: str, port: int):
-    """Start an eval-control server lane in a background thread; return the server."""
+def _write_settings(path: Path, domain: str, server_name: str) -> None:
+    # The tau2-eval plugin already wires the Stop hook; settings allowlists every domain
+    # MCP tool (by exact name) plus the harness's helper tools so a non-interactive run
+    # does not stall on — or get denied by — the permission system.
+    allow = _domain_tool_permissions(domain, server_name) + [
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "Skill",
+        "TodoWrite",
+    ]
+    path.write_text(json.dumps({"permissions": {"allow": allow}}, indent=2))
+
+
+def _start_control_lane(domain: str, port: int, *, timeout: float = 30.0):
+    """Start an eval-control server lane in a background thread and wait until it's up."""
+    import time
+
     import uvicorn
 
     from tau2.mcp.eval_control_server import create_eval_control_app
@@ -122,7 +143,18 @@ def _start_control_lane(domain: str, port: int):
     cfg = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")
     server = uvicorn.Server(cfg)
     threading.Thread(target=server.run, daemon=True).start()
-    return server
+
+    base = f"http://127.0.0.1:{port}"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if getattr(server, "started", False):
+            try:
+                requests.get(f"{base}/admin/info", timeout=5)
+                return server
+            except requests.RequestException:
+                pass
+        time.sleep(0.1)
+    raise RuntimeError(f"eval-control lane did not start on port {port}")
 
 
 def prepare_run(config: InsituRunConfig) -> dict:
@@ -179,7 +211,7 @@ def run(config: InsituRunConfig) -> dict:
     mcp_config_path = run_dir / "mcp.json"
     settings_path = run_dir / "settings.json"
     _write_mcp_config(mcp_config_path, server_name, f"{base}/mcp/{config.domain}")
-    _write_settings(settings_path)
+    _write_settings(settings_path, config.domain, server_name)
 
     cmd = build_claude_command(
         config, prepared["opening"], str(mcp_config_path), str(settings_path)

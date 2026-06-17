@@ -64,6 +64,25 @@ def _collect_tool_results(stdout: str) -> dict[str, str]:
     return results
 
 
+def _collect_denied_ids(stdout: str) -> set[str]:
+    """Tool-use ids the permission system denied (their calls never executed).
+
+    Such denials appear in ``permission_denials`` (typically on the terminal ``result``
+    event). The model EMITTED the tool_use but it never ran against the env, so it must
+    not enter the scored trajectory — otherwise replay re-executes a call the live run
+    never made (and the stored "permission denied" stub mismatches on verification).
+    Mirrors the claude_harness bridge's denial handling.
+    """
+    denied: set[str] = set()
+    for event in _iter_json_events(stdout):
+        denials = event.get("permission_denials")
+        if isinstance(denials, list):
+            for d in denials:
+                if isinstance(d, dict) and d.get("tool_use_id"):
+                    denied.add(d["tool_use_id"])
+    return denied
+
+
 def stream_json_to_trajectory(
     stdout: str,
     mcp_prefix: str,
@@ -74,6 +93,7 @@ def stream_json_to_trajectory(
         ``"mcp__tau2-legal__"``. The prefix is stripped to the bare toolkit name.
     """
     results = _collect_tool_results(stdout)
+    denied = _collect_denied_ids(stdout)
     messages: list[Message] = []
 
     for event in _iter_json_events(stdout):
@@ -100,6 +120,7 @@ def stream_json_to_trajectory(
             if isinstance(b, dict)
             and b.get("type") == "tool_use"
             and str(b.get("name", "")).startswith(mcp_prefix)
+            and b.get("id") not in denied
         ]
 
         if domain_calls:
