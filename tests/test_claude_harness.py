@@ -236,7 +236,7 @@ def test_seed_db_for_task_dispatches(tmp_path):
     retail_out = seed_db_for_task("retail", None, tmp_path / "retail.json")
     legal_out = seed_db_for_task("legal", None, tmp_path / "legal.json")
     assert retail_out.exists() and legal_out.exists()
-    with pytest.raises(ValueError, match="no DB seeder"):
+    with pytest.raises(ValueError, match="no DB support"):
         seed_db_for_task("airline", None, tmp_path / "airline.json")
 
 

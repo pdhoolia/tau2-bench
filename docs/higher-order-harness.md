@@ -70,7 +70,7 @@ fixes small-run latency — not as a replacement for mass benchmarking.
 | Orchestrator loop | A **`/tau2-eval <domain> <task-id>`** command starts a run; a **Stop hook** drives turn alternation by injecting the next user message and blocking premature stop (`{"decision":"block","reason":<user msg>}`). |
 | Agent under test | **The main session**, with the domain harness plugin loaded (skills + PreToolUse hooks + MCP live). Full fidelity. |
 | User simulator | A **single LLM call from the Stop hook**, reusing tau2's exact prompt construction (`simulation_guidelines.md` + persona + scenario) for parity. Model configurable: local MLX, gateway, or a cheap dedicated `claude -p` *for the user-sim only*. |
-| Environment / DB | **One persistent MCP server** per eval session; add a **`reset_task(task_id)`** tool that reseeds via the existing `task_db.seed_*` machinery. Removes per-task spawn cost. |
+| Environment / DB | **One eval-control server per parallel lane** (never shared across concurrent tasks — each is an OS-isolated world on its own port), reseeded between the tasks that lane runs via an admin `/admin/reset` route (`build_task_db`). Removes the per-*task* spawn cost while keeping parallel runs isolated. |
 | Evaluator | A terminal script that **calls tau2's existing `evaluate_simulation`** (deterministic DB-hash / action / communicate checks). NL-assertions via a **judge sub-agent**. |
 | Transcript / state | Written to a run file by the hooks (hooks are stateless across calls → file-backed state required). |
 
@@ -97,9 +97,11 @@ a freshly-replayed golden — dropping "double execution", while golden construc
 - **Phase 0 — De-risk spike.** Prove the Stop-hook continuation loop in a throwaway plugin: can a
   hook force N alternating turns by injecting text? Resolve risk #1 before anything else.
   → [`spikes/stop-hook-loop/`](../spikes/stop-hook-loop/).
-- **Phase 1 — Persistent MCP + reset.** Add `reset_task(task_id)` to the domain MCP servers
-  (reusing `task_db.seed_*`); run one persistent server per eval session. Independently useful;
-  also speeds the current CLI path.
+- **Phase 1 — Per-lane eval-control server + reset.** ✅ Added `build_task_db` (in-memory,
+  parity-checked against the file seeder) and `tau2.mcp.eval_control_server`: one isolated world
+  per instance, MCP tools at `/mcp/<domain>` plus admin `/admin/{reset,db_hash,info}`. **Concurrency:
+  one server per parallel lane, never a shared central DB** — proven isolated by
+  `tests/test_eval_control_server.py`. Independently useful; also speeds the current CLI path.
 - **Phase 2 — `tau2-eval` plugin, single task.** `/tau2-eval legal intake_happy_path`: opening
   message → Stop-hook user-sim loop → terminal `evaluate_simulation`. Reuse tau2 Python throughout.
 - **Phase 3 — Parity gate.** Run the legal 12 tasks in-situ vs `tau2 run`; require matching rewards.
