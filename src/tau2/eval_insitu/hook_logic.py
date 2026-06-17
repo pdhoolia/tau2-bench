@@ -96,9 +96,9 @@ def run_user_sim_turn(run_dir: str | Path, event: dict) -> dict:
         _log_turn(run_dir, {"decision": "allow_stop", "reason": "no agent text"})
         return {}
 
-    llm, llm_args = _resolve_user_sim(config)
+    llm, llm_args, backend = _resolve_user_sim(config)
     driver = UserSimDriver.load(
-        run_dir / "usersim.json", task, llm=llm, llm_args=llm_args
+        run_dir / "usersim.json", task, llm=llm, llm_args=llm_args, backend=backend
     )
     user_text, done = driver.respond_to(agent_text)
     driver.save(run_dir / "usersim.json")
@@ -110,17 +110,21 @@ def run_user_sim_turn(run_dir: str | Path, event: dict) -> dict:
     return {"decision": "block", "reason": user_text}
 
 
-def _resolve_user_sim(config: dict) -> tuple[str, dict]:
-    """Return (llm, llm_args) for the user-sim, from explicit config or the gateway."""
-    if config.get("user_sim_model"):
-        return config["user_sim_model"], (config.get("user_sim_llm_args") or {})
+def _resolve_user_sim(config: dict) -> tuple[str, dict, str]:
+    """Return (llm, llm_args, backend) for the user-sim: explicit config or gateway."""
+    if config.get("user_sim_model") is not None:
+        return (
+            config["user_sim_model"],
+            (config.get("user_sim_llm_args") or {}),
+            config.get("user_sim_backend", "litellm"),
+        )
     from tau2.eval_insitu.model_gateway import resolve_model
 
     spec = resolve_model(
         config.get("user_sim_role", "USER_SIM"),
         default_model=config.get("user_sim_default_model"),
     )
-    return spec.model, spec.llm_args
+    return spec.model, spec.llm_args, spec.backend
 
 
 def _log_turn(run_dir: Path, record: dict) -> None:

@@ -139,7 +139,9 @@ def prepare_run(config: InsituRunConfig) -> dict:
     spec = resolve_model(
         config.user_sim_role, default_model=config.user_sim_default_model
     )
-    driver = UserSimDriver(task, spec.model, llm_args=spec.llm_args)
+    driver = UserSimDriver(
+        task, spec.model, llm_args=spec.llm_args, backend=spec.backend
+    )
     opening = driver.opening()
 
     run_dir = Path(config.run_dir)
@@ -151,6 +153,7 @@ def prepare_run(config: InsituRunConfig) -> dict:
                 "task_id": config.task_id,
                 "user_sim_model": spec.model,
                 "user_sim_llm_args": spec.llm_args,
+                "user_sim_backend": spec.backend,
             },
             indent=2,
         )

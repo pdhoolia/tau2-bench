@@ -43,16 +43,30 @@ class UserSimDriver:
         llm_args: Optional[dict] = None,
         persona_config: Optional[PersonaConfig] = None,
         history: Optional[list[Message]] = None,
+        backend: str = "litellm",
     ):
         self.task = task
         self.llm = llm
         self.llm_args = llm_args or {}
-        self.sim = UserSimulator(
-            llm=llm,
-            instructions=str(task.user_scenario),
-            llm_args=self.llm_args,
-            persona_config=persona_config,
-        )
+        self.backend = backend
+        if backend == "claude_cli":
+            from tau2.eval_insitu.usersim_claude_cli import ClaudeCliUserSimulator
+
+            self.sim = ClaudeCliUserSimulator(
+                llm=llm or "claude-cli",
+                instructions=str(task.user_scenario),
+                persona_config=persona_config,
+                cli_model=llm or None,
+            )
+        elif backend == "litellm":
+            self.sim = UserSimulator(
+                llm=llm,
+                instructions=str(task.user_scenario),
+                llm_args=self.llm_args,
+                persona_config=persona_config,
+            )
+        else:
+            raise ValueError(f"Unknown user-sim backend {backend!r}")
         self.history: list[Message] = list(history or [])
         self.state = self.sim.get_init_state(message_history=list(self.history))
 
@@ -68,8 +82,9 @@ class UserSimDriver:
     ) -> "UserSimDriver":
         """Build a driver whose model is resolved from env via the model gateway.
 
-        Lets the user simulator run on a local MLX server, the LiteLLM proxy, or a
-        cloud provider with no code change (see ``model_gateway.resolve_model``).
+        Lets the user simulator run on a local MLX server, the LiteLLM proxy, a cloud
+        provider, or the zero-setup ``claude -p`` backend with no code change (see
+        ``model_gateway.resolve_model``).
         """
         from tau2.eval_insitu.model_gateway import resolve_model
 
@@ -80,6 +95,7 @@ class UserSimDriver:
             llm_args=spec.llm_args,
             persona_config=persona_config,
             history=history,
+            backend=spec.backend,
         )
 
     # --- turn generation -----------------------------------------------------
@@ -116,6 +132,7 @@ class UserSimDriver:
         payload = {
             "task_id": self.task.id,
             "llm": self.llm,
+            "backend": self.backend,
             "history": [{"role": m.role, "content": m.content} for m in self.history],
         }
         path.write_text(json.dumps(payload, indent=2))
@@ -129,6 +146,7 @@ class UserSimDriver:
         *,
         llm_args: Optional[dict] = None,
         persona_config: Optional[PersonaConfig] = None,
+        backend: Optional[str] = None,
     ) -> "UserSimDriver":
         payload = json.loads(Path(path).read_text())
         history: list[Message] = []
@@ -143,4 +161,5 @@ class UserSimDriver:
             llm_args=llm_args,
             persona_config=persona_config,
             history=history,
+            backend=backend or payload.get("backend", "litellm"),
         )

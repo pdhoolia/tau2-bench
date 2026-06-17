@@ -32,18 +32,22 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-# Provider -> (litellm model prefix, default api_base, default api_key).
+# Provider -> (litellm model prefix, default api_base, default api_key, backend).
 # api_base/api_key None means "let LiteLLM use its standard env (e.g. ANTHROPIC_API_KEY)".
-_PROFILES: dict[str, tuple[str, str | None, str | None]] = {
+# backend "litellm" routes through tau2's generate(); "claude_cli" shells to `claude -p`.
+_PROFILES: dict[str, tuple[str, str | None, str | None, str]] = {
     # Local MLX (Apple Silicon) or any OpenAI-compatible local server.
-    "mlx": ("openai/", "http://localhost:8080/v1", "mlx"),
-    "openai_local": ("openai/", "http://localhost:8080/v1", "local"),
+    "mlx": ("openai/", "http://localhost:8080/v1", "mlx", "litellm"),
+    "openai_local": ("openai/", "http://localhost:8080/v1", "local", "litellm"),
     # Cloud OpenAI (uses OPENAI_API_KEY unless overridden).
-    "openai": ("openai/", None, None),
+    "openai": ("openai/", None, None, "litellm"),
     # Anthropic cloud (uses ANTHROPIC_API_KEY unless overridden).
-    "anthropic": ("anthropic/", None, None),
+    "anthropic": ("anthropic/", None, None, "litellm"),
     # Corporate LiteLLM proxy (the fork's existing gateway).
-    "litellm": ("litellm_proxy/", None, None),
+    "litellm": ("litellm_proxy/", None, None, "litellm"),
+    # Zero-setup fallback: drive the user-sim via `claude -p` on the subscription.
+    # No api_base/key; the model string is passed to `claude --model` (blank = default).
+    "claude_cli": ("", None, None, "claude_cli"),
 }
 
 _DEFAULT_PROVIDER = "mlx"
@@ -55,6 +59,7 @@ class ModelSpec:
 
     model: str
     llm_args: dict = field(default_factory=dict)
+    backend: str = "litellm"
 
 
 def _env(role: str, key: str) -> str | None:
@@ -78,9 +83,15 @@ def resolve_model(
             f"Unknown provider {provider!r} for role {role}. "
             f"Known: {sorted(_PROFILES)}."
         )
-    prefix, default_base, default_key = _PROFILES[provider]
+    prefix, default_base, default_key, backend = _PROFILES[provider]
 
     raw_model = _env(role, "MODEL") or default_model
+
+    if backend == "claude_cli":
+        # Model is optional: empty means "let the claude CLI use its default model".
+        # It is passed to `claude --model`, not to LiteLLM, so no prefix/base/key.
+        return ModelSpec(model=raw_model or "", llm_args={}, backend=backend)
+
     if not raw_model:
         raise ValueError(
             f"No model for role {role}: set TAU2_{role.upper()}_MODEL "
@@ -99,4 +110,4 @@ def resolve_model(
     if api_key:
         llm_args["api_key"] = api_key
 
-    return ModelSpec(model=model, llm_args=llm_args)
+    return ModelSpec(model=model, llm_args=llm_args, backend=backend)
