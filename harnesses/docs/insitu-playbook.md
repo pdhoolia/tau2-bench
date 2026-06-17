@@ -3,7 +3,7 @@
 End-to-end runbook for benchmarking a domain harness **in-situ** — inside a live Claude
 Code session — with the **user simulator on a local MLX model** (Apple Silicon) and the
 agent-under-test on the Claude subscription. This is the inverse of
-[`playbook.md`](../playbook.md) (which drives `claude -p` from tau2); design rationale lives
+[`tau2-playbook.md`](tau2-playbook.md) (which drives `claude -p` from tau2); design rationale lives
 in [`higher-order-harness.md`](higher-order-harness.md).
 
 > **When to use which.** In-situ (this playbook) = iterative harness dev, demos, and

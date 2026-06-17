@@ -78,7 +78,7 @@ and `evaluation_criteria` (reference `actions`, `communicate_info`, `reward_basi
 
 > `POST /api/v1/run_domain` drives real LLM calls through LiteLLM and needs configured
 > API keys — it is not free. For running evaluations, prefer the CLI (`tau2 run`) and
-> the [LiteLLM-gateway eval playbook](../harnesses/playbook.md).
+> the [LiteLLM-gateway eval playbook](../harnesses/docs/tau2-playbook.md).
 
 ---
 

@@ -19,7 +19,7 @@ model dropdown for a head-to-head.
 This is the browser **TrajectoryVisualizer** path — distinct from the terminal
 `tau2 view` TUI. For the terminal viewer and the policy/tasks API servers, see
 [ui-viewers.md](ui-viewers.md). For gateway/`.env` plumbing, preflight smoke tests, and
-the `run_eval.sh` shortcut, see the [LiteLLM-gateway playbook](../harnesses/playbook.md).
+the `run_eval.sh` shortcut, see the [LiteLLM-gateway playbook](../harnesses/docs/tau2-playbook.md).
 
 ---
 
