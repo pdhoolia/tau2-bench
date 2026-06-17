@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/spikes/stop-hook-loop/user_sim_stub.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
