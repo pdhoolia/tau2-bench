@@ -69,7 +69,7 @@ fixes small-run latency — not as a replacement for mass benchmarking.
 |---|---|
 | Orchestrator loop | A **`/tau2-eval <domain> <task-id>`** command starts a run; a **Stop hook** drives turn alternation by injecting the next user message and blocking premature stop (`{"decision":"block","reason":<user msg>}`). |
 | Agent under test | **The main session**, with the domain harness plugin loaded (skills + PreToolUse hooks + MCP live). Full fidelity. |
-| User simulator | A **single LLM call from the Stop hook**, reusing tau2's exact prompt construction (`simulation_guidelines.md` + persona + scenario) for parity. Model configurable: local MLX, gateway, or a cheap dedicated `claude -p` *for the user-sim only*. |
+| User simulator | A **single LLM call from the Stop hook**, reusing tau2's exact prompt construction (`simulation_guidelines.md` + persona + scenario) for parity (`eval_insitu.usersim.UserSimDriver`, file-backed across the per-turn hook process). Model is provider-agnostic via the **model gateway** (`eval_insitu.model_gateway`): local MLX (Apple Silicon, Qwen 8-bit, OpenAI-compatible `/v1`), the LiteLLM proxy, or a cloud provider — all through tau2's LiteLLM `generate()`. |
 | Environment / DB | **One eval-control server per parallel lane** (never shared across concurrent tasks — each is an OS-isolated world on its own port), reseeded between the tasks that lane runs via an admin `/admin/reset` route (`build_task_db`). Removes the per-*task* spawn cost while keeping parallel runs isolated. |
 | Evaluator | A terminal script that **calls tau2's existing `evaluate_simulation`** (deterministic DB-hash / action / communicate checks). NL-assertions via a **judge sub-agent**. |
 | Transcript / state | Written to a run file by the hooks (hooks are stateless across calls → file-backed state required). |
@@ -111,7 +111,30 @@ a freshly-replayed golden — dropping "double execution", while golden construc
 - **Phase 5 (strategic) — Synthetic train/validate.** Wire Agent Tune task generation + a frozen
   validate split, enabling in-situ iterative harness improvement.
 
-## 7. Open decisions
+## 7. Model gateway (local MLX user-sim)
+
+The user-sim and judge are cost/latency-sensitive and a strong fit for **local
+inference** — a Qwen model (e.g. 8-bit) served on a 64 GB Apple-Silicon machine via an
+OpenAI-compatible endpoint (`mlx_lm.server` / LM Studio). Because both seams route
+through tau2's LiteLLM `generate()` (which forwards `api_base`/`api_key`), this is pure
+configuration. `eval_insitu.model_gateway.resolve_model(role)` reads, per role
+(`USER_SIM`, `JUDGE`):
+
+```
+TAU2_USER_SIM_PROVIDER = mlx | openai | anthropic | litellm   # default: mlx
+TAU2_USER_SIM_MODEL    = qwen2.5-32b-instruct-8bit
+TAU2_USER_SIM_API_BASE = http://localhost:8080/v1             # mlx/openai
+TAU2_USER_SIM_API_KEY  = mlx                                  # dummy ok locally
+```
+
+`provider=mlx` targets the local server via LiteLLM's `openai/` route; an explicit
+prefix in `MODEL` (`anthropic/…`, `litellm_proxy/…`) is honored verbatim. Build the
+driver with `UserSimDriver.from_env(task, role="USER_SIM")`. The agent-under-test stays
+on the Claude subscription (configured via the `claude` CLI / `ANTHROPIC_*`), so a
+typical local-first setup is: **agent = subscription Claude, user-sim + judge = local
+MLX Qwen** — minimizing both API cost and latency.
+
+## 8. Open decisions
 
 1. User-sim model for the prototype (local MLX / gateway / dedicated `claude -p`).
 2. Whether large comparative runs stay exclusively on the CLI path (recommended) or are also

@@ -56,6 +56,32 @@ class UserSimDriver:
         self.history: list[Message] = list(history or [])
         self.state = self.sim.get_init_state(message_history=list(self.history))
 
+    @classmethod
+    def from_env(
+        cls,
+        task: Task,
+        *,
+        role: str = "USER_SIM",
+        default_model: Optional[str] = None,
+        persona_config: Optional[PersonaConfig] = None,
+        history: Optional[list[Message]] = None,
+    ) -> "UserSimDriver":
+        """Build a driver whose model is resolved from env via the model gateway.
+
+        Lets the user simulator run on a local MLX server, the LiteLLM proxy, or a
+        cloud provider with no code change (see ``model_gateway.resolve_model``).
+        """
+        from tau2.eval_insitu.model_gateway import resolve_model
+
+        spec = resolve_model(role, default_model=default_model)
+        return cls(
+            task,
+            spec.model,
+            llm_args=spec.llm_args,
+            persona_config=persona_config,
+            history=history,
+        )
+
     # --- turn generation -----------------------------------------------------
 
     def opening(self) -> str:
