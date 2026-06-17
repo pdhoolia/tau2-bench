@@ -109,8 +109,10 @@ a freshly-replayed golden — dropping "double execution", while golden construc
   <1.0. **Live smoke** ([`spikes/mcp-control-smoke/`](../spikes/mcp-control-smoke/)) confirms
   `claude` invokes our eval-control MCP tools under root via the settings allowlist. Remaining
   for a live multi-turn run: a reachable user-sim model endpoint.
-- **Phase 3 — Parity gate.** Run the legal 12 tasks in-situ vs `tau2 run`; require matching rewards.
-  Credibility checkpoint. Needs the user-sim endpoint (local MLX / proxy / cloud).
+- **Phase 3 — Parity gate.** 🟡 First live point landed: `legal intake_happy_path` runs fully
+  in-situ (agent + `claude_cli` user-sim + eval-control server) and scores **reward 1.0** via the
+  canonical evaluator. Remaining: sweep all 12 legal tasks in-situ and require they match `tau2 run`
+  (ideally on the local MLX user-sim).
 - **Phase 4 — Generalize + product.** Domain-agnostic task loader, multi-task/multi-trial runner,
   results report; package for the marketplace alongside the existing `tau2-harnesses` entry.
 - **Phase 5 (strategic) — Synthetic train/validate.** Wire Agent Tune task generation + a frozen
@@ -138,6 +140,12 @@ driver with `UserSimDriver.from_env(task, role="USER_SIM")`. The agent-under-tes
 on the Claude subscription (configured via the `claude` CLI / `ANTHROPIC_*`), so a
 typical local-first setup is: **agent = subscription Claude, user-sim + judge = local
 MLX Qwen** — minimizing both API cost and latency.
+
+There is also a zero-setup `provider=claude_cli` (no MLX, no key): the user-sim turn is
+produced by a one-shot `claude -p` on the subscription, reusing tau2's exact user-sim
+system prompt. Great for demos/iteration (and the only path that runs with nothing but
+an authenticated `claude` CLI); for cost-controlled benchmarking prefer local MLX. No
+tool-using user simulators on this backend.
 
 ## 8. Open decisions
 
