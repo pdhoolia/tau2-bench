@@ -47,6 +47,21 @@ def _git_commit() -> str:
         return "unknown"
 
 
+def _git_ignored(path: str | Path) -> bool:
+    """True if ``path`` is excluded by a .gitignore rule (so a plain `git add` skips it)."""
+    try:
+        return (
+            subprocess.run(
+                ["git", "check-ignore", "-q", str(path)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode
+            == 0
+        )
+    except Exception:
+        return False
+
+
 def _mcp_prefix(domain: str) -> str:
     return f"mcp__tau2-{domain}__"
 
@@ -248,6 +263,19 @@ def main(argv: Optional[list[str]] = None) -> int:
         1 for s in results.simulations if s.reward_info and s.reward_info.reward == 1.0
     )
     print(f"Wrote submission {sub_dir} ({n_pass}/{n} passing)")
+
+    # Reminder: submissions/.gitignore excludes */trajectories/*.json, so the
+    # trajectory file needs `git add -f` or it is silently left untracked.
+    traj = sub_dir / "trajectories" / f"{args.domain}_results.json"
+    if _git_ignored(traj):
+        print(
+            "\nNOTE: the trajectory file is git-ignored "
+            "(submissions/.gitignore: */trajectories/*.json).\n"
+            "Force-add it (and the rest of the submission) so it is versioned:\n"
+            f"  git add -f {traj}\n"
+            f"  git add {sub_dir / 'submission.json'} "
+            f"{Path(args.submissions_root) / 'manifest.json'}"
+        )
     return 0
 
 
