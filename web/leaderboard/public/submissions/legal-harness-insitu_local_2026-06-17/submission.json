@@ -1,0 +1,17 @@
+{
+  "model_name": "legal-harness (in-situ, claude_cli user-sim)",
+  "model_organization": "local",
+  "submitting_organization": "local",
+  "submission_date": "2026-06-17",
+  "submission_type": "custom",
+  "is_new": true,
+  "trajectories_available": true,
+  "trajectory_files": {
+    "legal": "legal_results.json"
+  },
+  "methodology": {
+    "tau2_bench_version": "fork",
+    "user_simulator": "claude_cli (claude -p subscription default)",
+    "notes": "In-situ higher-order harness: the tau2-eval plugin runs the eval loop INSIDE a live Claude Code session (agent-under-test = the session + legal-harness plugin; a Stop hook plays the tau2 user simulator). User simulator = claude_cli backend (claude -p on the subscription, NOT the canonical/MLX sim). Agent base model = the claude CLI default (unpinned), NOT the Sonnet 4.5 of the legal-harness submission, so this is NOT apples-to-apples with that 12/12 run. Single trial; scored by the canonical tau2 evaluator: 9/12 passing. See harnesses/docs/legal-insitu-validation-2026-06-17.md for the per-task diagnosis."
+  }
+}
