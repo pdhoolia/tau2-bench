@@ -2,7 +2,7 @@
 
 Wraps :func:`tau2.eval_insitu.run_insitu.run` to evaluate a whole task set in-situ and
 aggregate the rewards — the multi-task layer behind the MLX benchmark playbook
-(``harnesses/insitu-playbook.md``).
+(``harnesses/docs/insitu-playbook.md``).
 
 Concurrency is safe by construction: each task run gets its own eval-control lane on its
 own port + private world (Phase 1), so ``--concurrency N`` runs N tasks in parallel

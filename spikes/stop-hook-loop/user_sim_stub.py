@@ -2,7 +2,7 @@
 """Phase 0 spike: a Stop hook that drives a multi-turn loop by injecting user turns.
 
 This is the load-bearing unknown for the higher-order-harness design (see
-docs/higher-order-harness.md, risk #1): can a Stop hook force the main session to
+harnesses/docs/higher-order-harness.md, risk #1): can a Stop hook force the main session to
 *continue* a conversation by feeding the next "user" message back to the model?
 
 This stub stands in for the real tau2 user-simulator. Instead of calling an LLM, it

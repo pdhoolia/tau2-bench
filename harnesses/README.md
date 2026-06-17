@@ -32,7 +32,7 @@ To run an evaluation of a harness plugin (and its baseline) end-to-end, follow t
 
 To instead evaluate a harness **in-situ** (inside a live Claude Code session, with the
 user simulator on a **local MLX model** and the agent on the Claude subscription), see
-the **[in-situ benchmark playbook](insitu-playbook.md)** — MLX setup, preflight, smoke,
+the **[in-situ benchmark playbook](docs/insitu-playbook.md)** — MLX setup, preflight, smoke,
 the multi-task suite runner, and the parity gate. This uses the domain-agnostic
 [`tau2-eval`](plugins/tau2-eval) plugin paired with the domain harness under test.
 

@@ -3,8 +3,8 @@
 End-to-end runbook for benchmarking a domain harness **in-situ** — inside a live Claude
 Code session — with the **user simulator on a local MLX model** (Apple Silicon) and the
 agent-under-test on the Claude subscription. This is the inverse of
-[`playbook.md`](playbook.md) (which drives `claude -p` from tau2); design rationale lives
-in [`../docs/higher-order-harness.md`](../docs/higher-order-harness.md).
+[`playbook.md`](../playbook.md) (which drives `claude -p` from tau2); design rationale lives
+in [`higher-order-harness.md`](higher-order-harness.md).
 
 > **When to use which.** In-situ (this playbook) = iterative harness dev, demos, and
 > small/medium validate runs on subscription + local MLX (low cost/latency). The CLI
@@ -25,7 +25,7 @@ uv run tau2 check-data       # sanity
 
 ## 2. Set up the MLX user-sim (on the Mac, 64 GB)
 
-Full details: [`../docs/mlx-user-sim-setup.md`](../docs/mlx-user-sim-setup.md). Essentials:
+Full details: [`mlx-user-sim-setup.md`](mlx-user-sim-setup.md). Essentials:
 
 ```bash
 pip install mlx-lm

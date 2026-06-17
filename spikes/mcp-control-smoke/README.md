@@ -28,4 +28,4 @@ Confirms, under root: MCP wiring via `--mcp-config`/`--strict-mcp-config`, the
 eval-control server's `/mcp/<domain>` endpoint, the `settings.json` tool allowlist as the
 non-root permission path, and that the agent invokes our domain tools against the seeded
 world. The remaining gap for full multi-turn e2e (Phase 3) is a reachable **user-sim
-model endpoint** (local MLX / proxy / cloud) — see `docs/higher-order-harness.md` §7.
+model endpoint** (local MLX / proxy / cloud) — see `harnesses/docs/higher-order-harness.md` §7.

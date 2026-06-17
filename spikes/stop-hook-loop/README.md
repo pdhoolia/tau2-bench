@@ -1,7 +1,7 @@
 # Phase 0 spike — Stop-hook continuation loop
 
 De-risks the **#1 unknown** of the higher-order-harness design
-([`docs/higher-order-harness.md`](../../docs/higher-order-harness.md), risk #1):
+([`harnesses/docs/higher-order-harness.md`](../../harnesses/docs/higher-order-harness.md), risk #1):
 
 > Can a Claude Code **Stop hook** force the main session to *continue* a conversation by
 > feeding the next "user" message back to the model — so the tau2 user-simulator can drive

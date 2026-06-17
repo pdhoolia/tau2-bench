@@ -2,7 +2,7 @@
   "name": "tau2-eval",
   "displayName": "tau2-eval (in-situ benchmark runner)",
   "version": "0.1.0",
-  "description": "Higher-order harness: runs a tau2-bench evaluation *inside* a live Claude Code session. The session is the agent-under-test (load a domain harness plugin alongside this one); a Stop hook plays the tau2 user-simulator, driving the conversation turn by turn until the user is done, then the run is scored with tau2's canonical evaluator. Domain-agnostic — pair it with any tau2 domain harness plugin. See docs/higher-order-harness.md.",
+  "description": "Higher-order harness: runs a tau2-bench evaluation *inside* a live Claude Code session. The session is the agent-under-test (load a domain harness plugin alongside this one); a Stop hook plays the tau2 user-simulator, driving the conversation turn by turn until the user is done, then the run is scored with tau2's canonical evaluator. Domain-agnostic — pair it with any tau2 domain harness plugin. See harnesses/docs/higher-order-harness.md.",
   "author": {
     "name": "pdhoolia",
     "email": "pdhoolia@gmail.com"

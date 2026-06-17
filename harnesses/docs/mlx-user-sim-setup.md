@@ -49,7 +49,7 @@ export TAU2_USER_SIM_API_KEY=mlx                             # dummy is fine for
 ```
 
 For the NL-assertion judge, set the same knobs with the `JUDGE` prefix
-(`TAU2_JUDGE_PROVIDER`, …). See commented examples in [`.env.example`](../.env.example).
+(`TAU2_JUDGE_PROVIDER`, …). See commented examples in [`.env.example`](../../.env.example).
 
 > `provider=mlx` routes through LiteLLM's `openai/` path. `TAU2_USER_SIM_MODEL` **must
 > match** what the server loaded (mlx_lm.server echoes the model id) or you'll get a 404.

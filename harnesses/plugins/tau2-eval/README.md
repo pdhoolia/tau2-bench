@@ -2,7 +2,7 @@
 
 Runs a tau2-bench evaluation **inside a live Claude Code session**, inverting the usual
 setup where tau2 drives `claude -p` from the outside. Here the session *is* the
-agent-under-test and tau2 is the guest. See [`docs/higher-order-harness.md`](../../../docs/higher-order-harness.md)
+agent-under-test and tau2 is the guest. See [`harnesses/docs/higher-order-harness.md`](../../docs/higher-order-harness.md)
 for the full design and rationale.
 
 ## How it works
@@ -43,9 +43,9 @@ python -m tau2.eval_insitu.run_insitu \
 ```
 
 User-sim / judge models are configured via the gateway env vars (local MLX by default).
-**Local MLX setup runbook:** [`docs/mlx-user-sim-setup.md`](../../../docs/mlx-user-sim-setup.md)
+**Local MLX setup runbook:** [`harnesses/docs/mlx-user-sim-setup.md`](../../docs/mlx-user-sim-setup.md)
 (install → serve → configure → `python -m tau2.eval_insitu.preflight` → run). Design
-rationale in `docs/higher-order-harness.md` §7; env examples in `.env.example`
+rationale in `harnesses/docs/higher-order-harness.md` §7; env examples in `.env.example`
 (`TAU2_USER_SIM_*`). Zero-setup fallback: `TAU2_USER_SIM_PROVIDER=claude_cli`.
 
 ## Prerequisites

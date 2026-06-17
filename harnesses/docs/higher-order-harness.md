@@ -1,12 +1,12 @@
 # Higher-order harness: tau2-bench as a Claude Code plugin
 
 > Status: **design / exploration**. Branch `pdhoolia/tau2-bench-claude-plugin`.
-> Companion de-risk spike: [`spikes/stop-hook-loop/`](../spikes/stop-hook-loop/).
+> Companion de-risk spike: [`spikes/stop-hook-loop/`](../../spikes/stop-hook-loop/).
 
 ## 1. Motivation — inverting the equation
 
 Today **tau2 is the driver** and Claude Code is a guest. The `claude_harness` agent
-([`src/tau2/agent/claude_harness/`](../src/tau2/agent/claude_harness/)) drives, per *user turn*:
+([`src/tau2/agent/claude_harness/`](../../src/tau2/agent/claude_harness/)) drives, per *user turn*:
 
 1. `cli_runner.py` spawns **`claude -p ... --resume <session>`** as a fresh subprocess;
 2. it lazily spawns a **per-task MCP server**
@@ -82,7 +82,7 @@ a freshly-replayed golden — dropping "double execution", while golden construc
 
 1. **Stop-hook → next-user-message injection.** Whether `{"decision":"block","reason":...}`
    reliably feeds `reason` back as the next turn is **version-dependent**. **#1 unknown — spiked
-   first** (see [`spikes/stop-hook-loop/`](../spikes/stop-hook-loop/)). Fallbacks:
+   first** (see [`spikes/stop-hook-loop/`](../../spikes/stop-hook-loop/)). Fallbacks:
    `hookSpecificOutput.additionalContext` / `systemMessage`, or file-based injection.
 2. **Parity with the canonical evaluator.** Credibility depends on the in-situ run producing the
    **same scores** as `tau2 run`. Anchor: reuse tau2's Python user-sim prompt + `evaluate_simulation`,
@@ -96,7 +96,7 @@ a freshly-replayed golden — dropping "double execution", while golden construc
 
 - **Phase 0 — De-risk spike.** Prove the Stop-hook continuation loop in a throwaway plugin: can a
   hook force N alternating turns by injecting text? Resolve risk #1 before anything else.
-  → [`spikes/stop-hook-loop/`](../spikes/stop-hook-loop/).
+  → [`spikes/stop-hook-loop/`](../../spikes/stop-hook-loop/).
 - **Phase 1 — Per-lane eval-control server + reset.** ✅ Added `build_task_db` (in-memory,
   parity-checked against the file seeder) and `tau2.mcp.eval_control_server`: one isolated world
   per instance, MCP tools at `/mcp/<domain>` plus admin `/admin/{reset,db_hash,info}`. **Concurrency:
@@ -106,18 +106,18 @@ a freshly-replayed golden — dropping "double execution", while golden construc
   `eval_insitu.{usersim,transcript,score,hook_logic,model_gateway,run_insitu}` +
   `harnesses/plugins/tau2-eval` (Stop-hook user-sim). Scoring delegates to
   `evaluate_simulation` (parity by reuse) — golden legal trajectories score 1.0, broken ones
-  <1.0. **Live smoke** ([`spikes/mcp-control-smoke/`](../spikes/mcp-control-smoke/)) confirms
+  <1.0. **Live smoke** ([`spikes/mcp-control-smoke/`](../../spikes/mcp-control-smoke/)) confirms
   `claude` invokes our eval-control MCP tools under root via the settings allowlist. Remaining
   for a live multi-turn run: a reachable user-sim model endpoint.
 - **Phase 3 — Parity gate.** 🟡 Live points landed. `legal intake_happy_path` scores **reward
   1.0** in-situ; a full 12-task `claude_cli`-user-sim sweep scored **9/12** end-to-end (loop +
   concurrency + scorer validated; the 3 misses are genuine agent-decision diffs, not bugs — see
-  [`harnesses/docs/legal-insitu-validation-2026-06-17.md`](../harnesses/docs/legal-insitu-validation-2026-06-17.md)).
+  [`harnesses/docs/legal-insitu-validation-2026-06-17.md`](legal-insitu-validation-2026-06-17.md)).
   Remaining: a true parity sweep with the agent pinned to the baseline model + the canonical/MLX
   user-sim, required to match `tau2 run`.
 - **Phase 4 — Generalize + product.** 🟡 In progress: multi-task/multi-trial **suite runner**
   (`eval_insitu.suite`, concurrency-safe lanes) + `preflight` + the MLX benchmark playbook
-  ([`harnesses/insitu-playbook.md`](../harnesses/insitu-playbook.md)). Remaining: scripted
+  ([`harnesses/insitu-playbook.md`](insitu-playbook.md)). Remaining: scripted
   in-situ-vs-canonical parity diff, domain-agnostic task loader, marketplace packaging.
 - **Phase 5 (strategic) — Synthetic train/validate.** Wire Agent Tune task generation + a frozen
   validate split, enabling in-situ iterative harness improvement.
