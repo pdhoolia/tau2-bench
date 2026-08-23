@@ -91,10 +91,7 @@ const TrajectoryVisualizer = () => {
 
   // --- Parse URL params for deep linking ---
   const getUrlParams = () => {
-    const hash = window.location.hash || ''
-    const qIdx = hash.indexOf('?')
-    if (qIdx === -1) return {}
-    const params = new URLSearchParams(hash.slice(qIdx + 1))
+    const params = new URLSearchParams(window.location.search)
     const trialRaw = params.get('trial')
     return {
       model: params.get('model'),
@@ -110,7 +107,7 @@ const TrajectoryVisualizer = () => {
   // Suppress URL updates while we're restoring from URL
   const restoringFromUrl = useRef(false)
 
-  // --- Sync state → URL hash (replaceState to avoid history clutter) ---
+  // --- Sync state → URL query (replaceState to avoid history clutter) ---
   useEffect(() => {
     if (restoringFromUrl.current) return
     if (submissionsLoading) return
@@ -123,9 +120,9 @@ const TrajectoryVisualizer = () => {
     if (selectedTrialIdx > 0) params.set('trial', String(selectedTrialIdx))
 
     const qs = params.toString()
-    const newHash = qs ? `#trajectory-visualizer?${qs}` : '#trajectory-visualizer'
-    if (window.location.hash !== newHash) {
-      window.history.replaceState(null, '', newHash)
+    const newUrl = qs ? `/trajectory-visualizer?${qs}` : '/trajectory-visualizer'
+    if (`${window.location.pathname}${window.location.search}` !== newUrl) {
+      window.history.replaceState(null, '', newUrl)
     }
   }, [selectedModelDir, selectedDomain, selectedTaskId, selectedTrialIdx, viewMode, submissionsLoading])
 
@@ -153,6 +150,8 @@ const TrajectoryVisualizer = () => {
                 model_name: sub.model_name,
                 model_organization: sub.model_organization || '',
                 reasoning_effort: sub.reasoning_effort || null,
+                submission_type: sub.submission_type || 'standard',
+                user_simulator: sub.methodology?.user_simulator || null,
                 trajectory_files: sub.trajectory_files,
                 availableDomains: Object.keys(sub.trajectory_files),
                 modality,
@@ -577,7 +576,7 @@ const TrajectoryVisualizer = () => {
                   <optgroup label="τ-voice (Voice)">
                     {submissions.filter(s => s.modality === 'voice').map(s => (
                       <option key={s.dir} value={s.dir}>
-                        {s.model_name} ({s.model_organization})
+                        {s.model_name} ({s.model_organization}){s.submission_type === 'custom' ? ` [Custom]${s.user_simulator ? ` — user sim: ${s.user_simulator}` : ''}` : ''}
                       </option>
                     ))}
                   </optgroup>
