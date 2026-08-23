@@ -6,7 +6,10 @@ from tau2.eval_insitu.model_gateway import resolve_model
 
 
 def _clear(monkeypatch):
-    for k in ("PROVIDER", "MODEL", "API_BASE", "API_KEY"):
+    # MAX_TOKENS/EXTRA_BODY too: a developer .env that tunes the local MLX
+    # user-sim would otherwise leak into llm_args and fail the exact-dict
+    # assertions below.
+    for k in ("PROVIDER", "MODEL", "API_BASE", "API_KEY", "MAX_TOKENS", "EXTRA_BODY"):
         monkeypatch.delenv(f"TAU2_USER_SIM_{k}", raising=False)
 
 
