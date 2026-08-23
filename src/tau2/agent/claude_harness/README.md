@@ -83,7 +83,7 @@ Validated live: the retail bridge has been run end-to-end through a LiteLLM gate
 `build_command` (`--plugin-dir`, `--mcp-config`, `--strict-mcp-config`,
 `--permission-mode bypassPermissions`, stream-json) drives the retail-harness plugin +
 MCP server, and the replayed trajectory scores on the tau2 evaluator (reward, action,
-and DB match). See [harnesses/playbook.md](../../../../harnesses/playbook.md) to
+and DB match). See [harnesses/docs/tau2-playbook.md](../../../../harnesses/docs/tau2-playbook.md) to
 reproduce. CLI flags can drift across versions, so the assembly stays in one
 overridable method (`ClaudeCLIRunner.build_command`) — tune there if a flag name has
 moved.

@@ -27,8 +27,14 @@ domain-aware — it picks the right MCP server, plugin, and per-task DB seeder f
 the domain under test (`retail` and `legal` today). See
 [`src/tau2/agent/claude_harness/`](../src/tau2/agent/claude_harness).
 To run an evaluation of a harness plugin (and its baseline) end-to-end, follow the
-**[evaluation playbook](playbook.md)** — preflight, smoke run, full run, and the
+**[evaluation playbook](docs/tau2-playbook.md)** — preflight, smoke run, full run, and the
 `run_eval.sh` shortcut, with all models routed through a LiteLLM gateway.
+
+To instead evaluate a harness **in-situ** (inside a live Claude Code session, with the
+user simulator on a **local MLX model** and the agent on the Claude subscription), see
+the **[in-situ benchmark playbook](docs/insitu-playbook.md)** — MLX setup, preflight, smoke,
+the multi-task suite runner, and the parity gate. This uses the domain-agnostic
+[`tau2-eval`](plugins/tau2-eval) plugin paired with the domain harness under test.
 
 ## Layout
 

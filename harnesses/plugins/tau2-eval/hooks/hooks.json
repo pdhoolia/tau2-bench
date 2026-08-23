@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -m tau2.eval_insitu.hook_logic",
+            "statusMessage": "tau2-eval: user simulator taking its turn"
+          }
+        ]
+      }
+    ]
+  }
+}

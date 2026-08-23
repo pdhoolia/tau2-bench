@@ -3,7 +3,7 @@
 # run_eval.sh — run tau2-bench evaluations through a LiteLLM gateway.
 #
 # Runs the standard `llm_agent` baseline and/or the `claude_harness` (domain-specific
-# higher-order harness) agent, exactly as described in harnesses/playbook.md.
+# higher-order harness) agent, exactly as described in harnesses/docs/tau2-playbook.md.
 #
 # Usage:
 #   harnesses/run_eval.sh <domain> <smoke|full> [baseline|harness|both]

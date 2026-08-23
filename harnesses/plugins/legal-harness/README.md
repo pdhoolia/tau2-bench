@@ -103,7 +103,7 @@ This plugin runs head-to-head against the legacy `llm_agent` via the
 real legal tools over MCP; the bridge reconciles those calls into the trajectory
 the evaluator scores — see [`src/tau2/agent/claude_harness/`](../../../src/tau2/agent/claude_harness)).
 For the end-to-end commands (preflight, smoke run, full run, the `run_eval.sh`
-shortcut), follow the [**evaluation playbook**](../../playbook.md):
+shortcut), follow the [**evaluation playbook**](../../docs/tau2-playbook.md):
 
 ```bash
 harnesses/run_eval.sh legal smoke both     # 1-task wiring check, baseline + harness

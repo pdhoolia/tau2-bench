@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react'
 import './Leaderboard.css'
 import ProgressView from './ProgressView'
 
-// The leaderboard is split into three buckets, one per benchmark track:
+// The leaderboard is split into one bucket per benchmark track:
 // τ³-Banking (published as τ-knowledge), τ³-Voice (published as τ-voice:
-// retail/airline/telecom in real-time voice), and τ²-bench (core:
-// retail/airline/telecom in text, near saturation).
-const BENCHMARK_VALUES = new Set(['core', 'knowledge', 'voice'])
+// retail/airline/telecom in real-time voice), τ²-bench (core:
+// retail/airline/telecom in text, near saturation), and Legal — a
+// fork-local domain that upstream does not carry.
+const BENCHMARK_VALUES = new Set(['core', 'knowledge', 'voice', 'legal'])
 
 // Pre-bucket URLs and localStorage used benchmark=text for what is now 'core'.
 const normalizeBenchmark = (value) => (value === 'text' ? 'core' : value)
@@ -41,6 +42,11 @@ const CORE_DOMAINS = [
 // (core 3 domains) stable and keeps all knowledge scores in one place.
 const KNOWLEDGE_DOMAINS = [
   { key: 'banking_knowledge', label: '🏦 Banking' },
+]
+// Fork-local: the legal domain lives only in this fork, so it gets its own
+// bucket rather than being folded into τ²-bench's Overall average.
+const LEGAL_DOMAINS = [
+  { key: 'legal', label: '⚖️ Legal' },
 ]
 const VOICE_DOMAINS = [
   { key: 'overall', label: '📊 Overall' },
@@ -78,6 +84,17 @@ const BENCHMARK_CONFIG = {
     // card, so a banking-only submission has somewhere to show its score.
     breakdownDomains: ['retail', 'airline', 'telecom', 'banking_knowledge'],
   },
+  legal: {
+    label: 'Legal',
+    icon: '⚖️',
+    title: 'Legal Leaderboard',
+    description: 'Text agents handling NSW boutique-firm client intake under the Legal Profession Uniform Law. Fork-local domain; not part of upstream τ²-bench.',
+    hoverNote: 'Legal is a fork-local domain, not an upstream τ²-bench track',
+    modality: 'text',
+    domains: LEGAL_DOMAINS,
+    defaultDomain: 'legal',
+    breakdownDomains: ['legal'],
+  },
   core: {
     label: 'τ²-bench',
     icon: '📝',
@@ -95,6 +112,7 @@ const DOMAIN_CARDS = {
   airline: { key: 'airline', label: 'Airline', icon: '✈️', desc: 'Flight bookings, modifications, cancellations, refunds, baggage, and compensation.' },
   telecom: { key: 'telecom', label: 'Telecom', icon: '📱', desc: 'Technical support for connectivity issues, bill payments, and plan management.' },
   banking_knowledge: { key: 'banking_knowledge', label: 'Banking', icon: '🏦', desc: 'Banking customer service with knowledge retrieval over policy documents.' },
+  legal: { key: 'legal', label: 'Legal', icon: '⚖️', desc: 'NSW boutique-firm client intake: conflict checks, costs disclosure, and engagement under the LPUL.' },
 }
 
 const formatVoicePipeline = (pipeline) => {
@@ -382,6 +400,12 @@ const Leaderboard = () => {
             submission.results.telecom?.pass_3 || null,
             submission.results.telecom?.pass_4 || null
           ]
+          const legalData = [
+            submission.results.legal?.pass_1 || null,
+            submission.results.legal?.pass_2 || null,
+            submission.results.legal?.pass_3 || null,
+            submission.results.legal?.pass_4 || null
+          ]
           const bankingData = [
             submission.results.banking_knowledge?.pass_1 || null,
             submission.results.banking_knowledge?.pass_2 || null,
@@ -411,13 +435,15 @@ const Leaderboard = () => {
             airline: airlineData,
             telecom: telecomData,
             banking_knowledge: bankingData,
+            legal: legalData,
             overall: overallData,
             // Cost information for each domain
             costs: {
               retail: submission.results.retail?.cost || null,
               airline: submission.results.airline?.cost || null,
               telecom: submission.results.telecom?.cost || null,
-              banking_knowledge: submission.results.banking_knowledge?.cost || null
+              banking_knowledge: submission.results.banking_knowledge?.cost || null,
+              legal: submission.results.legal?.cost || null
             },
             isLegacy,
             organization: submission.submitting_organization,

@@ -20,5 +20,22 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "mcp__tau2-legal__run_conflict_check",
+      "mcp__tau2-legal__get_conflict_check",
+      "mcp__tau2-legal__find_clients",
+      "mcp__tau2-legal__get_client",
+      "mcp__tau2-legal__create_client",
+      "mcp__tau2-legal__verify_client_identity",
+      "mcp__tau2-legal__get_costs_agreement",
+      "mcp__tau2-legal__create_costs_agreement",
+      "mcp__tau2-legal__list_practitioners",
+      "mcp__tau2-legal__get_practitioner",
+      "mcp__tau2-legal__get_matter",
+      "mcp__tau2-legal__open_matter",
+      "mcp__tau2-legal__transfer_to_human"
+    ]
   }
 }

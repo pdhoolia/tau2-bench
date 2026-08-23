@@ -1,7 +1,7 @@
 # Playbook — evaluating a domain harness on τ²-bench (via a LiteLLM gateway)
 
 How to run a τ²-bench evaluation of a **domain-specific higher-order harness**
-(`--agent claude_harness`, e.g. the [retail-harness](plugins/retail-harness) plugin)
+(`--agent claude_harness`, e.g. the [retail-harness](../plugins/retail-harness) plugin)
 and its **baseline** (`--agent llm_agent`), with every model routed through a corporate
 LiteLLM gateway.
 
@@ -12,7 +12,7 @@ Hold the **base model constant** on both sides so the *harness*, not a bigger mo
 the variable under test.
 
 > Gateway plumbing (which env var each consumer reads, and why) is documented once in
-> [AGENTS.md → "LiteLLM gateway"](../AGENTS.md) and [`.env.example`](../.env.example).
+> [AGENTS.md → "LiteLLM gateway"](../../AGENTS.md) and [`.env.example`](../../.env.example).
 > This playbook is the operational runbook on top of that.
 
 ---
@@ -164,7 +164,7 @@ uv run tau2 view
 
 ## 5. The scripted shortcut — `run_eval.sh`
 
-[`harnesses/run_eval.sh`](run_eval.sh) does §2–§4 in one call: preflight, then the
+[`harnesses/run_eval.sh`](../run_eval.sh) does §2–§4 in one call: preflight, then the
 baseline and/or harness run, with smoke/full sizing.
 
 ```bash
