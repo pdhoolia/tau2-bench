@@ -286,9 +286,10 @@ class _TaskLogContext:
                 / f"sim_{self.simulation_id}"
             )
 
+        # Always set: llm_utils reads it to scope Strata conversations per simulation.
+        _current_simulation_id.set(self.simulation_id)
         if self.verbose_logs and self.task_log_dir:
             self.task_log_dir.mkdir(parents=True, exist_ok=True)
-            _current_simulation_id.set(self.simulation_id)
 
             def make_simulation_filter(sim_id: str):
                 def simulation_filter(record):
@@ -332,7 +333,7 @@ class _TaskLogContext:
             set_llm_log_dir(None)
         if self._handler_id is not None:
             logger.remove(self._handler_id)
-            _current_simulation_id.set(None)
+        _current_simulation_id.set(None)
         return False
 
 

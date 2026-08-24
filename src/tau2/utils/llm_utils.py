@@ -27,6 +27,9 @@ from tau2.config import (
     REDIS_PASSWORD,
     REDIS_PORT,
     REDIS_PREFIX,
+    STRATA_API_KEY,
+    STRATA_BASE,
+    STRATA_CALLS,
     USE_LANGFUSE,
 )
 from tau2.data_model.message import (
@@ -352,6 +355,32 @@ def _write_llm_log(
         json.dump(call_data, f, indent=2)
 
 
+def _route_via_strata(kwargs: dict[str, Any], call_name: Optional[str]) -> None:
+    """Point this call at the Strata gateway, one conversation per tau2 simulation.
+
+    No-op unless TAU2_STRATA_BASE is set and call_name is in TAU2_STRATA_CALLS.
+    Mutates kwargs: api_base/api_key (unless the caller set them explicitly) and
+    extra_body.metadata (user_id = simulation id, Strata's sticky-routing key;
+    task = call_name, for router rules).
+    """
+    if not STRATA_BASE or call_name not in STRATA_CALLS:
+        return
+    # Lazy import: runner.batch imports this module at load time.
+    from tau2.runner.batch import _current_simulation_id
+
+    sim_id = _current_simulation_id.get()
+    conversation = f"/c/tau2-{sim_id}" if sim_id else ""
+    kwargs.setdefault("api_base", f"{STRATA_BASE}{conversation}/litellm/v1")
+    kwargs.setdefault("api_key", STRATA_API_KEY)
+    extra_body = dict(kwargs.get("extra_body") or {})
+    metadata = dict(extra_body.get("metadata") or {})
+    metadata.setdefault("task", call_name)
+    if sim_id:
+        metadata.setdefault("user_id", sim_id)
+    extra_body["metadata"] = metadata
+    kwargs["extra_body"] = extra_body
+
+
 def generate(
     model: str,
     messages: list[Message],
@@ -384,6 +413,8 @@ def generate(
         "VERTEXAI_LOCATION"
     ):
         os.environ["VERTEXAI_LOCATION"] = "global"
+
+    _route_via_strata(kwargs, call_name)
 
     litellm_messages = to_litellm_messages(messages)
     tools_schema = [tool.openai_schema for tool in tools] if tools else None

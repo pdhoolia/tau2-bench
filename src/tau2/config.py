@@ -47,6 +47,23 @@ DEFAULT_LLM_EVAL_USER_SIMULATOR = os.getenv(
     "TAU2_LLM_EVAL_USER_SIMULATOR", "claude-opus-4-5"
 )
 
+# =============================================================================
+# STRATA GATEWAY (fork) — route selected LLM calls through a Strata gateway
+# =============================================================================
+# When TAU2_STRATA_BASE is set (e.g. "http://127.0.0.1:8080"), every generate()
+# whose call_name is in TAU2_STRATA_CALLS is sent to
+#   {TAU2_STRATA_BASE}/c/tau2-<simulation_id>/litellm/v1
+# i.e. one Strata conversation per tau2 simulation, forwarded by Strata to its
+# configured LiteLLM. Models must still be "litellm_proxy/<name>". Unset = no-op.
+STRATA_BASE = os.getenv("TAU2_STRATA_BASE", "").rstrip("/")
+STRATA_CALLS = {
+    c.strip()
+    for c in os.getenv("TAU2_STRATA_CALLS", "agent_response").split(",")
+    if c.strip()
+}
+# Strata's keyless sentinel (ADR-0025): the gateway injects its own LiteLLM key.
+STRATA_API_KEY = os.getenv("TAU2_STRATA_API_KEY", "strata-tenant-credential")
+
 # LLM debug logging
 DEFAULT_LLM_LOG_MODE = "latest"  # Options: "all", "latest"
 
