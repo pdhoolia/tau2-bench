@@ -1,0 +1,12 @@
+{
+  "name": "tau2-agent",
+  "sticky": "user_id",
+  "rules": [],
+  "defaultRoute": {
+    "variants": [
+      { "model": "aws/claude-sonnet-4-5", "weight": 50 },
+      { "model": "aws/claude-haiku-4-5", "weight": 50 }
+    ],
+    "compression": { "maskToolResults": { "olderThanTurns": 4 } }
+  }
+}

@@ -75,3 +75,31 @@ def test_generate_tool_call(model: str, tool_call_messages: list[Message], tool:
     assert isinstance(response, AssistantMessage)
     assert response.tool_calls is None
     assert response.content == "25"
+
+
+def test_route_via_strata(monkeypatch):
+    from tau2.runner.batch import _current_simulation_id
+    from tau2.utils import llm_utils
+
+    monkeypatch.setattr(llm_utils, "STRATA_BASE", "http://strata:8080")
+    monkeypatch.setattr(llm_utils, "STRATA_CALLS", {"agent_response"})
+    token = _current_simulation_id.set("sim-1")
+    try:
+        kwargs = {"temperature": 0.0}
+        llm_utils._route_via_strata(kwargs, "agent_response")
+        assert kwargs["api_base"] == "http://strata:8080/c/tau2-sim-1/litellm/v1"
+        assert kwargs["api_key"] == llm_utils.STRATA_API_KEY
+        assert kwargs["extra_body"]["metadata"] == {
+            "task": "agent_response",
+            "user_id": "sim-1",
+        }
+        # Roles not in STRATA_CALLS are untouched.
+        other = {"temperature": 0.0}
+        llm_utils._route_via_strata(other, "user_simulator_response")
+        assert other == {"temperature": 0.0}
+        # Explicit caller api_base wins.
+        explicit = {"api_base": "http://elsewhere/v1"}
+        llm_utils._route_via_strata(explicit, "agent_response")
+        assert explicit["api_base"] == "http://elsewhere/v1"
+    finally:
+        _current_simulation_id.reset(token)
