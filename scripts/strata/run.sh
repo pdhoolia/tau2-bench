@@ -35,9 +35,17 @@ export TAU2_STRATA_BASE TAU2_STRATA_CALLS TAU2_LLM_NL_ASSERTIONS \
 # ── preflight ────────────────────────────────────────────────────────────
 [ -n "${LITELLM_PROXY_API_BASE:-}" ] || { echo "LITELLM_PROXY_API_BASE unset (see .env.example)"; exit 1; }
 curl -sf -m 5 "$TAU2_STRATA_BASE/health" >/dev/null || { echo "Strata gateway not healthy at $TAU2_STRATA_BASE"; exit 1; }
-curl -sf -m 15 "$TAU2_STRATA_BASE/litellm/v1/models" -H "Authorization: Bearer ${TAU2_STRATA_API_KEY:-strata-tenant-credential}" \
-  | grep -q "\"${AGENT_LLM#litellm_proxy/}\"" || { echo "$AGENT_LLM not listed via Strata → LiteLLM"; exit 1; }
 [[ "$AGENT_LLM" == litellm_proxy/* ]] || { echo "AGENT_LLM must be litellm_proxy/<name> to honor api_base"; exit 1; }
+if [[ "$AGENT_LLM" == litellm_proxy/strata/* ]]; then
+  # Agent targets a Strata router: make sure it exists (create from ROUTER_JSON if
+  # absent), is live, and its variant models are on the LiteLLM catalog.
+  uv run python scripts/strata/ensure_router.py "${AGENT_LLM#litellm_proxy/strata/}" \
+    --base "$TAU2_STRATA_BASE" --definition "${ROUTER_JSON:-scripts/strata/router.json}" \
+    --api-key "${TAU2_STRATA_API_KEY:-strata-tenant-credential}"
+else
+  curl -sf -m 15 "$TAU2_STRATA_BASE/litellm/v1/models" -H "Authorization: Bearer ${TAU2_STRATA_API_KEY:-strata-tenant-credential}" \
+    | grep -q "\"${AGENT_LLM#litellm_proxy/}\"" || { echo "$AGENT_LLM not listed via Strata → LiteLLM"; exit 1; }
+fi
 
 echo "domain=$DOMAIN tasks=[$TASK_IDS] trials=$NUM_TRIALS concurrency=$MAX_CONCURRENCY"
 echo "agent=$AGENT_LLM via $TAU2_STRATA_BASE ($TAU2_STRATA_CALLS) | user=$USER_LLM direct | save_to=$SAVE_TO"

@@ -34,6 +34,21 @@ AGENT_LLM=litellm_proxy/strata/tau2-agent scripts/strata/run.sh          # via a
 scripts/strata/run.sh -- --verbose-logs                                  # extra tau2 flags
 ```
 
+When `AGENT_LLM` targets a Strata router (`litellm_proxy/strata/<name>`), the
+preflight runs `ensure_router.py` instead of the plain catalog check: if the router
+is absent it is created from `router.json` (override with `ROUTER_JSON=…`) and made
+live — the default `tau2-agent` definition is a 50/50 sonnet/haiku A/B, sticky per
+simulation, with `maskToolResults(olderThanTurns: 4)`; if it exists it must already
+be live (a draft/paused router is left alone — fix it in the console), and either
+way every variant model must be visible on the LiteLLM catalog behind Strata. A
+freshly created router is probed with a 1-token call (conversation `tau2-preflight`)
+until the gateway's route-refresh tick picks it up (~15 s).
+
+In the ledger, a routed call shows `original_model: strata/<name>`, the served
+variant as `model`, `router_rule: default`, and `router_counterfactual_*` anchored
+on the heavier variant. Masking stats appear only once resent tool results are older
+than the plan's `olderThanTurns`.
+
 Knobs (env): `DOMAIN`, `TASK_IDS`, `NUM_TRIALS`, `MAX_CONCURRENCY`, `AGENT_LLM`,
 `USER_LLM`, `SAVE_TO`, `TAU2_STRATA_BASE`, `TAU2_STRATA_CALLS`, and the judge models
 `TAU2_LLM_NL_ASSERTIONS` / `TAU2_LLM_ENV_INTERFACE` / `TAU2_LLM_EVAL_USER_SIMULATOR`
