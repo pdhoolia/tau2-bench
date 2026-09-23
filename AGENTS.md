@@ -116,7 +116,7 @@ python -m tau2.mcp --domain retail --transport http --port 8001
 - `unified_server.py` mounts the four per-domain servers under one HTTP port (one tunnel/container for all domains).
 - `airline_server.py`, `retail_server.py`, `telecom_server.py`, `legal_server.py` each expose a `create_<domain>_mcp_server(db_path=...)` factory; pass `--db-path` to point at a custom DB.
 - DBs load at startup; write operations mutate **in-memory** state only and do not persist to disk by default.
-- Business-logic errors are returned as `{"error": "..."}` structured responses rather than raised exceptions.
+- Business-logic errors are raised as fastmcp `ToolError`s, so clients get an `isError` result carrying the message. Do not return `{"error": ...}` dicts: they fail validation against the tool's output schema, which comes from the success return type.
 
 ## Architecture
 

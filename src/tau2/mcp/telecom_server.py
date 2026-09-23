@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 
 from tau2.domains.telecom.data_model import TelecomDB
 from tau2.domains.telecom.tools import TelecomTools
@@ -71,7 +72,7 @@ def _wrap_tool_for_mcp(func: Callable, name: str) -> Callable:
     Handles:
     - Preserving function signature and docstring
     - Serializing Pydantic model responses to dict
-    - Converting exceptions to error messages
+    - Raising exceptions as MCP tool errors (isError) with their message
     """
 
     @functools.wraps(func)
@@ -100,11 +101,10 @@ def _wrap_tool_for_mcp(func: Callable, name: str) -> Callable:
             return result
 
         except ValueError as e:
-            # Return business logic errors as structured error response
-            return {"error": str(e)}
+            # Business-logic errors -> MCP isError result carrying the message
+            raise ToolError(str(e)) from e
         except Exception as e:
-            # Return unexpected errors
-            return {"error": f"Unexpected error: {type(e).__name__}: {str(e)}"}
+            raise ToolError(f"Unexpected error: {type(e).__name__}: {e}") from e
 
     # Preserve the original function's name for MCP tool registration
     wrapper.__name__ = name
