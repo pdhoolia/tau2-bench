@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import functools
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -23,6 +24,7 @@ from fastmcp import FastMCP
 from tau2.domains.retail.data_model import RetailDB
 from tau2.domains.retail.tools import RetailTools
 from tau2.domains.retail.utils import RETAIL_DB_PATH
+from tau2.mcp.tasks import task_toolkit
 from tau2.mcp.worlds import build_domain_server, serve_http
 
 INSTRUCTIONS = "tau2-bench retail domain: e-commerce orders, returns, exchanges and address changes for an online store's customers."
@@ -47,7 +49,11 @@ def create_retail_mcp_server(
     """
     path = str(db_path or RETAIL_DB_PATH)
     return build_domain_server(
-        name, lambda: RetailTools(RetailDB.load(path)), INSTRUCTIONS, per_session
+        name,
+        lambda: RetailTools(RetailDB.load(path)),
+        INSTRUCTIONS,
+        per_session,
+        make_task_toolkit=functools.partial(task_toolkit, "retail"),
     )
 
 

@@ -8,6 +8,11 @@ own world of that domain (see ``worlds.py``), accessible at:
     - http://localhost:8000/mcp/telecom  (13 telecom tools)
     - http://localhost:8000/mcp/legal    (13 legal tools)
 
+Off the MCP path, for a client that evaluates on a domain's tasks (see ``tasks.py``):
+    - GET /admin/<domain>/tasks[?split=test]        the task set
+    - GET /admin/<domain>/sessions/<session-id>/hash the hash of a session's world
+      (``x-strata-task`` names the task a session that made no tool call yet starts from)
+
 Usage:
     # Run unified HTTP server
     python -m tau2.mcp.unified_server --port 8000
@@ -28,6 +33,7 @@ from starlette.routing import Route
 from tau2.mcp.airline_server import create_airline_mcp_server
 from tau2.mcp.legal_server import create_legal_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
+from tau2.mcp.tasks import TASK_HEADER, task_set
 from tau2.mcp.telecom_server import create_telecom_mcp_server
 from tau2.mcp.worlds import IDLE_SECONDS, DropWorldOnDelete
 
@@ -139,11 +145,36 @@ def create_unified_http_app(
             }
         )
 
+    worlds_by_domain = {domain_name: mcp.worlds for domain_name, _, mcp in domain_apps}
+
+    async def admin_tasks(request):
+        domain = request.path_params["domain"]
+        if domain not in worlds_by_domain:
+            return JSONResponse({"error": f"no domain {domain!r}"}, status_code=404)
+        split = request.query_params.get("split") or None
+        return JSONResponse(task_set(domain, split))
+
+    async def admin_hash(request):
+        domain = request.path_params["domain"]
+        worlds = worlds_by_domain.get(domain)
+        if worlds is None:
+            return JSONResponse({"error": f"no domain {domain!r}"}, status_code=404)
+        task_id = request.headers.get(TASK_HEADER) or None
+        try:
+            digest = worlds.state_hash(request.path_params["session_id"], task_id)
+        except ValueError as e:
+            return JSONResponse({"error": str(e)}, status_code=404)
+        return JSONResponse({"hash": digest})
+
     # Create the combined Starlette app
     # We need to include routes from all domain apps
     combined_routes = [
         Route("/", info),
         Route("/info", info),
+        Route("/admin/{domain}/tasks", admin_tasks, methods=["GET"]),
+        Route(
+            "/admin/{domain}/sessions/{session_id}/hash", admin_hash, methods=["GET"]
+        ),
     ]
 
     # Add routes from each domain app

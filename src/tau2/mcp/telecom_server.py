@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import functools
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -23,6 +24,7 @@ from fastmcp import FastMCP
 from tau2.domains.telecom.data_model import TelecomDB
 from tau2.domains.telecom.tools import TelecomTools
 from tau2.domains.telecom.utils import TELECOM_DB_PATH
+from tau2.mcp.tasks import task_toolkit
 from tau2.mcp.worlds import build_domain_server, serve_http
 
 INSTRUCTIONS = "tau2-bench telecom domain: customer accounts, billing, plans and line management for a mobile carrier's customers."
@@ -47,7 +49,11 @@ def create_telecom_mcp_server(
     """
     path = str(db_path or TELECOM_DB_PATH)
     return build_domain_server(
-        name, lambda: TelecomTools(TelecomDB.load(path)), INSTRUCTIONS, per_session
+        name,
+        lambda: TelecomTools(TelecomDB.load(path)),
+        INSTRUCTIONS,
+        per_session,
+        make_task_toolkit=functools.partial(task_toolkit, "telecom"),
     )
 
 
