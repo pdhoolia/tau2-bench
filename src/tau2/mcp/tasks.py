@@ -80,28 +80,33 @@ def _title(task: Task) -> str:
     return line if len(line) <= 200 else line[:199] + "…"
 
 
-def _task_json(task: Task, splits: list[str], runnable: Any) -> dict[str, Any]:
+def _criteria(task: Task) -> dict[str, Any]:
+    """The evaluation criteria a client scores on. ``actions`` is omitted when the task
+    has none (tau2 then does not check the end state); an empty list is kept, since the
+    gold end state is then the initial state."""
     criteria = task.evaluation_criteria
+    if criteria is None:
+        return {}
+    out: dict[str, Any] = {
+        "communicate": criteria.communicate_info or [],
+        "nlAssertions": criteria.nl_assertions or [],
+        "rewardBasis": [r.value for r in criteria.reward_basis],
+    }
+    if criteria.actions is not None:
+        out["actions"] = [
+            {"name": a.name, "arguments": a.arguments, "requestor": a.requestor}
+            for a in criteria.actions
+        ]
+    return out
+
+
+def _task_json(task: Task, splits: list[str], runnable: Any) -> dict[str, Any]:
     return {
         "id": task.id,
         "title": _title(task),
         "splits": splits,
         "userScenario": str(task.user_scenario),
-        "criteria": {
-            "actions": [
-                {
-                    "name": a.name,
-                    "arguments": a.arguments,
-                    "requestor": a.requestor,
-                }
-                for a in (criteria.actions or [])
-            ]
-            if criteria
-            else [],
-            "communicate": (criteria.communicate_info or []) if criteria else [],
-            "nlAssertions": (criteria.nl_assertions or []) if criteria else [],
-            "rewardBasis": [r.value for r in criteria.reward_basis] if criteria else [],
-        },
+        "criteria": _criteria(task),
         "runnable": runnable,
     }
 
