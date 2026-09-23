@@ -311,12 +311,10 @@ Databases are loaded at server startup. Write operations modify the in-memory st
 
 ## Error Handling
 
-Tool errors are returned as structured responses:
+Tool errors are returned as MCP tool errors: the result has `isError: true` and its text content is the error message, e.g.
 
-```json
-{
-  "error": "User not found"
-}
+```
+User not found
 ```
 
-Business logic errors (invalid user, order not found, insufficient balance, etc.) are caught and returned in this format rather than raising exceptions.
+Business logic errors (invalid user, order not found, insufficient balance, etc.) carry the toolkit's message as-is; unexpected failures are prefixed with `Unexpected error: <ExceptionType>:`. Errors are not returned as `{"error": ...}` payloads, because a tool's output schema is derived from its success return type and such a payload would fail output validation.

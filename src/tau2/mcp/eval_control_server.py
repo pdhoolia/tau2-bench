@@ -37,6 +37,7 @@ from typing import Any, Callable
 
 import uvicorn
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from loguru import logger
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -92,9 +93,10 @@ def _wrap_tool_for_mcp(func: Callable, name: str) -> Callable:
                 ]
             return result
         except ValueError as e:
-            return {"error": str(e)}
+            # Business-logic errors -> MCP isError result carrying the message
+            raise ToolError(str(e)) from e
         except Exception as e:
-            return {"error": f"Unexpected error: {type(e).__name__}: {str(e)}"}
+            raise ToolError(f"Unexpected error: {type(e).__name__}: {e}") from e
 
     wrapper.__name__ = name
     return wrapper
