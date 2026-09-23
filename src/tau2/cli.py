@@ -257,7 +257,7 @@ def add_run_args(parser):
     parser.add_argument(
         "--audio-native-provider",
         type=str,
-        choices=["openai", "gemini", "xai", "nova", "qwen", "livekit"],
+        choices=["openai", "openai_live", "gemini", "xai", "nova", "qwen", "livekit"],
         default=DEFAULT_AUDIO_NATIVE_PROVIDER,
         help=f"Audio native API provider. Default is '{DEFAULT_AUDIO_NATIVE_PROVIDER}'.",
     )
@@ -274,6 +274,20 @@ def add_run_args(parser):
         type=str,
         default=None,
         help="Audio native model to use. If not specified, uses the default model for the selected provider.",
+    )
+    parser.add_argument(
+        "--live-config",
+        type=json.loads,
+        default=None,
+        help="JSON config for openai_live: backend_model (required), voice, and optional frontend_prompt/backend_prompt overrides.",
+    )
+    parser.add_argument(
+        "--realtime-generation",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Run user LLM/TTS generation without blocking audio ticks. "
+        "Defaults to enabled for openai_live and disabled for other providers. "
+        "Use --no-realtime-generation to disable.",
     )
     parser.add_argument(
         "--reasoning-effort",
@@ -628,6 +642,8 @@ def main():
                 model=audio_native_model,
                 cascaded_config_name=args.cascaded_config,
                 reasoning_effort=args.reasoning_effort,
+                live_config=args.live_config,
+                realtime_generation=args.realtime_generation,
                 # Timing
                 tick_duration_seconds=args.tick_duration,
                 max_steps_seconds=args.max_steps_seconds,

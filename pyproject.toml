@@ -36,6 +36,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+live = [
+    "tau2[voice]",
+    "aiortc==1.15.0",
+    "httpx[socks]>=0.24.0",
+]
 voice = [
     "elevenlabs>=1.54.0",
     "deepgram-sdk>=3.7.3",
@@ -46,7 +51,7 @@ voice = [
     "pydub>=0.25.0",
     "tqdm>=4.0",
     "aiohttp>=3.0",
-    "google-genai>=1.0.0",
+    "google-genai>=2.15.0",
     "boto3>=1.35.0",
     "aws-sdk-bedrock-runtime>=0.3.0",
     "google-cloud-aiplatform>=1.38.0",
@@ -78,7 +83,7 @@ mcp = [
     "fastmcp>=2.0.0",
 ]
 all = [
-    "tau2[voice,knowledge,gym,dev,experiments]",
+    "tau2[voice,live,knowledge,gym,dev,experiments]",
 ]
 [project.urls]
 Homepage = "https://taubench.com/"
