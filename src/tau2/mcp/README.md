@@ -39,8 +39,20 @@ python -m tau2.mcp.unified_server --port 8000
 This is ideal for:
 
 - **Tunneling**: Only one ngrok/cloudflare tunnel needed
-- **Deployment**: Single container/process for all domains
+- **Deployment**: Single container/process for all domains (`Dockerfile` at the repo root builds it)
 - **Testing**: Switch between domains without port changes
+
+**A world per MCP session.** Over HTTP (the unified server and `--transport http`), each
+MCP session gets its own copy of the domain's database: loaded from the file on the
+session's first tool call, dropped when the client ends the session (`DELETE`) or after
+10 minutes idle. One client's writes never reach another client's world, as `tau2 run`
+builds a new environment per simulation. A client has to send `Mcp-Session-Id` to keep
+its world across calls; a client that sends none gets a new world on every call. Over
+stdio the process holds one world: one process is one session. See `worlds.py`.
+
+```bash
+docker build -t tau2-mcp . && docker run -p 8000:8000 tau2-mcp
+```
 
 ### Single Domain (stdio or HTTP)
 

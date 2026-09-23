@@ -23,6 +23,7 @@ from tau2.mcp.airline_server import create_airline_mcp_server
 from tau2.mcp.legal_server import create_legal_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
 from tau2.mcp.telecom_server import create_telecom_mcp_server
+from tau2.mcp.worlds import serve_http
 
 DOMAIN_FACTORIES = {
     "airline": create_airline_mcp_server,
@@ -94,22 +95,13 @@ Examples:
     # Determine server name
     name = args.name or f"tau2-{args.domain}"
 
-    # Create the server
-    mcp = factory(
-        db_path=args.db_path,
-        name=name,
-    )
-
-    # Run with appropriate transport
+    # Run with appropriate transport: stdio holds one world for the process, HTTP one
+    # world per MCP session (see worlds.py).
     if args.transport == "stdio":
-        mcp.run()
+        factory(db_path=args.db_path, name=name).run()
     else:
-        # HTTP transport using streamable-http
-        mcp.run(
-            transport="streamable-http",
-            host=args.host,
-            port=args.port,
-        )
+        mcp = factory(db_path=args.db_path, name=name, per_session=True)
+        serve_http(mcp, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
