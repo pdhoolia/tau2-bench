@@ -80,7 +80,7 @@ experiments = [
     "scikit-learn>=1.6.1",
 ]
 mcp = [
-    "fastmcp>=2.0.0",
+    "fastmcp>=4.0.0",
 ]
 all = [
     "tau2[voice,live,knowledge,gym,dev,experiments]",
