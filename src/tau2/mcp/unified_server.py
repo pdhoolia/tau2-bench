@@ -1,7 +1,8 @@
 """
 Unified HTTP server exposing all Tau2-Bench domains as separate MCP endpoints.
 
-Each domain has its own MCP server with isolated tools, accessible at:
+Each domain has its own MCP server with isolated tools, and each MCP session gets its
+own world of that domain (see ``worlds.py``), accessible at:
     - http://localhost:8000/mcp/airline  (14 airline tools)
     - http://localhost:8000/mcp/retail   (16 retail tools)
     - http://localhost:8000/mcp/telecom  (13 telecom tools)
@@ -20,6 +21,7 @@ from pathlib import Path
 
 import uvicorn
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
@@ -27,6 +29,7 @@ from tau2.mcp.airline_server import create_airline_mcp_server
 from tau2.mcp.legal_server import create_legal_mcp_server
 from tau2.mcp.retail_server import create_retail_mcp_server
 from tau2.mcp.telecom_server import create_telecom_mcp_server
+from tau2.mcp.worlds import IDLE_SECONDS, DropWorldOnDelete
 
 
 def create_unified_http_app(
@@ -54,20 +57,30 @@ def create_unified_http_app(
         Starlette application with all domains mounted
     """
     # Create the individual MCP servers
+    # (a world per MCP session: one client's writes never reach another's world)
     airline_mcp = create_airline_mcp_server(
-        db_path=airline_db_path, name="tau2-airline"
+        db_path=airline_db_path, name="tau2-airline", per_session=True
     )
-    retail_mcp = create_retail_mcp_server(db_path=retail_db_path, name="tau2-retail")
+    retail_mcp = create_retail_mcp_server(
+        db_path=retail_db_path, name="tau2-retail", per_session=True
+    )
     telecom_mcp = create_telecom_mcp_server(
-        db_path=telecom_db_path, name="tau2-telecom"
+        db_path=telecom_db_path, name="tau2-telecom", per_session=True
     )
-    legal_mcp = create_legal_mcp_server(db_path=legal_db_path, name="tau2-legal")
+    legal_mcp = create_legal_mcp_server(
+        db_path=legal_db_path, name="tau2-legal", per_session=True
+    )
 
     # Create HTTP apps for each domain with their specific paths
-    airline_app = airline_mcp.http_app(path="/mcp/airline", transport="streamable-http")
-    retail_app = retail_mcp.http_app(path="/mcp/retail", transport="streamable-http")
-    telecom_app = telecom_mcp.http_app(path="/mcp/telecom", transport="streamable-http")
-    legal_app = legal_mcp.http_app(path="/mcp/legal", transport="streamable-http")
+    def http_app(mcp, path):
+        return mcp.http_app(
+            path=path, transport="streamable-http", session_idle_timeout=IDLE_SECONDS
+        )
+
+    airline_app = http_app(airline_mcp, "/mcp/airline")
+    retail_app = http_app(retail_mcp, "/mcp/retail")
+    telecom_app = http_app(telecom_mcp, "/mcp/telecom")
+    legal_app = http_app(legal_mcp, "/mcp/legal")
 
     # Store references for lifespan management
     domain_apps = [
@@ -138,10 +151,16 @@ def create_unified_http_app(
         for route in domain_app.routes:
             combined_routes.append(route)
 
+    # A client's DELETE ends its MCP session; its world goes with it.
+    worlds_by_path = {
+        f"/mcp/{domain_name}": mcp.worlds for domain_name, _, mcp in domain_apps
+    }
     app = Starlette(
         routes=combined_routes,
         lifespan=combined_lifespan,
+        middleware=[Middleware(DropWorldOnDelete, worlds_by_path=worlds_by_path)],
     )
+    app.state.worlds = worlds_by_path
 
     return app
 

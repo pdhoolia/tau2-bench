@@ -1,0 +1,11 @@
+# The image needs the project manifest, the source and the four served domains' data.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src
+!data/tau2/domains/airline
+!data/tau2/domains/retail
+!data/tau2/domains/telecom
+!data/tau2/domains/legal
+**/__pycache__

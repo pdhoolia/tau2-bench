@@ -114,8 +114,11 @@ python -m tau2.mcp --domain retail --transport http --port 8001
 ```
 
 - `unified_server.py` mounts the four per-domain servers under one HTTP port (one tunnel/container for all domains).
-- `airline_server.py`, `retail_server.py`, `telecom_server.py`, `legal_server.py` each expose a `create_<domain>_mcp_server(db_path=...)` factory; pass `--db-path` to point at a custom DB.
-- DBs load at startup; write operations mutate **in-memory** state only and do not persist to disk by default.
+- `airline_server.py`, `retail_server.py`, `telecom_server.py`, `legal_server.py` each expose a `create_<domain>_mcp_server(db_path=..., per_session=...)` factory; pass `--db-path` to point at a custom DB. They share one tool wrapper, `worlds.py`.
+- **A world per MCP session over HTTP** (the unified server and `--transport http`): each session gets its own copy of the domain's DB, loaded from the file on its first tool call, dropped on the client's `DELETE` or after 10 minutes idle (`worlds.py`) — the way `tau2 run` builds a new environment per simulation. A client must send `Mcp-Session-Id` to keep its world across calls; one that sends none gets a new world on every call. Over stdio the process holds one world (one process = one session).
+- Writes mutate **in-memory** state only and never persist to disk.
+- Each domain server sends an MCP `instructions` line saying what it simulates.
+- `Dockerfile` builds the unified server on :8000 (`docker build -t tau2-mcp . && docker run -p 8000:8000 tau2-mcp`); it carries only the four served domains' data.
 - Business-logic errors are raised as fastmcp `ToolError`s, so clients get an `isError` result carrying the message. Do not return `{"error": ...}` dicts: they fail validation against the tool's output schema, which comes from the success return type.
 
 ## Architecture

@@ -1,7 +1,8 @@
 """
 FastMCP server wrapping Tau2-Bench airline domain tools.
 
-Supports both stdio (local) and streamable-http (remote) transports.
+Supports both stdio (local) and streamable-http (remote) transports. Over stdio the
+process holds one world; over HTTP each MCP session gets its own (see ``worlds.py``).
 
 Usage:
     # Run with stdio transport (default)
@@ -15,108 +16,39 @@ Usage:
 """
 
 import argparse
-import functools
 from pathlib import Path
-from typing import Any, Callable
 
 from fastmcp import FastMCP
-from fastmcp.exceptions import ToolError
 
 from tau2.domains.airline.data_model import FlightDB
 from tau2.domains.airline.tools import AirlineTools
 from tau2.domains.airline.utils import AIRLINE_DB_PATH
+from tau2.mcp.worlds import build_domain_server, serve_http
+
+INSTRUCTIONS = "tau2-bench airline domain: flight booking, reservations, modifications, cancellations and baggage for an airline's customers."
 
 
 def create_airline_mcp_server(
     db_path: str | Path | None = None,
     name: str = "tau2-airline",
+    per_session: bool = False,
 ) -> FastMCP:
     """
     Create a FastMCP server wrapping Tau2-Bench airline tools.
 
     Args:
-        db_path: Path to the airline database JSON file.
+        db_path: Path to the airline database file.
                  Defaults to the standard Tau2-Bench location.
         name: Name for the MCP server.
+        per_session: One world per MCP session (HTTP) instead of one per process.
 
     Returns:
         Configured FastMCP server instance.
     """
-    # Load the airline database
-    if db_path is None:
-        db_path = AIRLINE_DB_PATH
-
-    db = FlightDB.load(str(db_path))
-
-    # Create the airline toolkit
-    airline_tools = AirlineTools(db)
-
-    # Create FastMCP server
-    mcp = FastMCP(name)
-
-    # Register each tool from the toolkit
-    for tool_name, tool_func in airline_tools.tools.items():
-        # Wrap the tool function to handle Pydantic model serialization
-        wrapped_func = _wrap_tool_for_mcp(tool_func, tool_name)
-
-        # Register with FastMCP
-        mcp.tool()(wrapped_func)
-
-    return mcp
-
-
-def _wrap_tool_for_mcp(func: Callable, name: str) -> Callable:
-    """
-    Wrap a toolkit function for MCP compatibility.
-
-    Handles:
-    - Preserving function signature and docstring
-    - Serializing Pydantic model responses to dict
-    - Raising exceptions as MCP tool errors (isError) with their message
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> dict[str, Any] | str | list:
-        try:
-            result = func(*args, **kwargs)
-
-            # Handle Pydantic model responses
-            if hasattr(result, "model_dump"):
-                return result.model_dump()
-
-            # Handle list of Pydantic models
-            if isinstance(result, list):
-                return [
-                    item.model_dump() if hasattr(item, "model_dump") else item
-                    for item in result
-                ]
-
-            # Handle list of tuples (for search_onestop_flight)
-            if (
-                isinstance(result, list)
-                and result
-                and isinstance(result[0], (list, tuple))
-            ):
-                return [
-                    [
-                        item.model_dump() if hasattr(item, "model_dump") else item
-                        for item in pair
-                    ]
-                    for pair in result
-                ]
-
-            return result
-
-        except ValueError as e:
-            # Business-logic errors -> MCP isError result carrying the message
-            raise ToolError(str(e)) from e
-        except Exception as e:
-            raise ToolError(f"Unexpected error: {type(e).__name__}: {e}") from e
-
-    # Preserve the original function's name for MCP tool registration
-    wrapper.__name__ = name
-
-    return wrapper
+    path = str(db_path or AIRLINE_DB_PATH)
+    return build_domain_server(
+        name, lambda: AirlineTools(FlightDB.load(path)), INSTRUCTIONS, per_session
+    )
 
 
 def main():
@@ -129,7 +61,7 @@ Examples:
     # Run with stdio transport (for local use with Claude Desktop)
     python -m tau2.mcp.airline_server
 
-    # Run with HTTP transport (for remote access)
+    # Run with HTTP transport (for remote access; a world per MCP session)
     python -m tau2.mcp.airline_server --transport http --port 8000
 
     # Use custom database
@@ -156,7 +88,7 @@ Examples:
         "--db-path",
         type=str,
         default=None,
-        help="Path to airline database JSON file (default: standard Tau2-Bench location)",
+        help="Path to airline database file (default: standard Tau2-Bench location)",
     )
 
     parser.add_argument(
@@ -165,22 +97,13 @@ Examples:
 
     args = parser.parse_args()
 
-    # Create the server
-    mcp = create_airline_mcp_server(
-        db_path=args.db_path,
-        name=args.name,
-    )
-
-    # Run with appropriate transport
     if args.transport == "stdio":
-        mcp.run()
+        create_airline_mcp_server(db_path=args.db_path, name=args.name).run()
     else:
-        # HTTP transport using streamable-http
-        mcp.run(
-            transport="streamable-http",
-            host=args.host,
-            port=args.port,
+        mcp = create_airline_mcp_server(
+            db_path=args.db_path, name=args.name, per_session=True
         )
+        serve_http(mcp, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
