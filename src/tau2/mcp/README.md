@@ -50,6 +50,27 @@ builds a new environment per simulation. A client has to send `Mcp-Session-Id` t
 its world across calls; a client that sends none gets a new world on every call. Over
 stdio the process holds one world: one process is one session. See `worlds.py`.
 
+**Evaluating on a domain's tasks** (`tasks.py`). A client that sends
+`x-strata-task: <task id>` on its session's requests gets a world built from that task's
+initial state (the same `Environment.set_state` path the evaluator uses); an unknown id
+is a tool error. Off the MCP path, so an agent under test never sees them, the unified
+server serves:
+
+- `GET /admin/<domain>/tasks[?split=test]` — the agent's system prompt for the domain
+  (tau2's instructions and policy) and, per task, the user scenario (`str(user_scenario)`,
+  what tau2's user simulator plays), the reference actions, the `communicate_info`
+  strings, the NL assertions and the reward basis. telecom's tasks are marked not
+  runnable: they are scored on the user's own phone, whose tools are not served.
+- `GET /admin/<domain>/sessions/<Mcp-Session-Id>/hash` — the hash of a session's world
+  (`get_db_hash`); for a session that has made no tool call yet, the world it starts
+  from (send the same `x-strata-task`).
+
+A client scores the end state the way `EnvironmentEvaluator` does: the hash of the run's
+own session against the hash of a fresh session on the same task after the task's
+reference actions. `tests/test_mcp_tasks.py` checks that both equal the evaluator's
+hashes, on every airline, retail and legal task. Do not publish the admin routes to an
+agent under test: the task set carries the reference actions.
+
 ```bash
 docker build -t tau2-mcp . && docker run -p 8000:8000 tau2-mcp
 ```

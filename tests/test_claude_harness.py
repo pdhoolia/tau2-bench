@@ -231,13 +231,15 @@ def test_seed_legal_db_default_roundtrips(tmp_path):
 
 
 def test_seed_db_for_task_dispatches(tmp_path):
-    from tau2.agent.claude_harness.task_db import seed_db_for_task
+    from tau2.agent.claude_harness.task_db import build_task_db, seed_db_for_task
 
-    retail_out = seed_db_for_task("retail", None, tmp_path / "retail.json")
-    legal_out = seed_db_for_task("legal", None, tmp_path / "legal.json")
-    assert retail_out.exists() and legal_out.exists()
+    for domain in ("airline", "retail", "legal"):
+        assert seed_db_for_task(domain, None, tmp_path / f"{domain}.json").exists()
+    # telecom's database (TOML, with datetimes) is built in memory for the MCP worlds;
+    # it is not written as a JSON file.
+    assert build_task_db("telecom", None) is not None
     with pytest.raises(ValueError, match="no DB support"):
-        seed_db_for_task("airline", None, tmp_path / "airline.json")
+        seed_db_for_task("mock", None, tmp_path / "mock.json")
 
 
 # ---------------------------------------------------------------------------

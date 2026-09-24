@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import functools
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -23,6 +24,7 @@ from fastmcp import FastMCP
 from tau2.domains.legal.data_model import LegalDB
 from tau2.domains.legal.tools import LegalTools
 from tau2.domains.legal.utils import LEGAL_DB_PATH
+from tau2.mcp.tasks import task_toolkit
 from tau2.mcp.worlds import build_domain_server, serve_http
 
 INSTRUCTIONS = "tau2-bench legal domain: client intake for a New South Wales boutique law firm under the Legal Profession Uniform Law."
@@ -47,7 +49,11 @@ def create_legal_mcp_server(
     """
     path = str(db_path or LEGAL_DB_PATH)
     return build_domain_server(
-        name, lambda: LegalTools(LegalDB.load(path)), INSTRUCTIONS, per_session
+        name,
+        lambda: LegalTools(LegalDB.load(path)),
+        INSTRUCTIONS,
+        per_session,
+        make_task_toolkit=functools.partial(task_toolkit, "legal"),
     )
 
 

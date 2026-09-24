@@ -104,9 +104,27 @@ def _legal_spec() -> tuple[Callable, Callable]:
     return (lambda: LegalDB.load(str(LEGAL_DB_PATH))), get_environment
 
 
+def _airline_spec() -> tuple[Callable, Callable]:
+    from tau2.domains.airline.data_model import FlightDB
+    from tau2.domains.airline.environment import get_environment
+    from tau2.domains.airline.utils import AIRLINE_DB_PATH
+
+    return (lambda: FlightDB.load(str(AIRLINE_DB_PATH))), get_environment
+
+
+def _telecom_spec() -> tuple[Callable, Callable]:
+    from tau2.domains.telecom.data_model import TelecomDB
+    from tau2.domains.telecom.environment import get_environment
+    from tau2.domains.telecom.utils import TELECOM_DB_PATH
+
+    return (lambda: TelecomDB.load(str(TELECOM_DB_PATH))), get_environment
+
+
 # Domain name -> callable returning (load_default_db, get_environment).
 _DOMAIN_SPECS: dict[str, Callable[[], tuple[Callable, Callable]]] = {
+    "airline": _airline_spec,
     "retail": _retail_spec,
+    "telecom": _telecom_spec,
     "legal": _legal_spec,
 }
 

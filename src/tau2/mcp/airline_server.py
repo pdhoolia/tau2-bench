@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import functools
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -23,6 +24,7 @@ from fastmcp import FastMCP
 from tau2.domains.airline.data_model import FlightDB
 from tau2.domains.airline.tools import AirlineTools
 from tau2.domains.airline.utils import AIRLINE_DB_PATH
+from tau2.mcp.tasks import task_toolkit
 from tau2.mcp.worlds import build_domain_server, serve_http
 
 INSTRUCTIONS = "tau2-bench airline domain: flight booking, reservations, modifications, cancellations and baggage for an airline's customers."
@@ -47,7 +49,11 @@ def create_airline_mcp_server(
     """
     path = str(db_path or AIRLINE_DB_PATH)
     return build_domain_server(
-        name, lambda: AirlineTools(FlightDB.load(path)), INSTRUCTIONS, per_session
+        name,
+        lambda: AirlineTools(FlightDB.load(path)),
+        INSTRUCTIONS,
+        per_session,
+        make_task_toolkit=functools.partial(task_toolkit, "airline"),
     )
 
 
