@@ -30,6 +30,16 @@ USER_TOOLS_REASON = (
     "needs the user's own tools (the user's side of the domain is not served over MCP)"
 )
 
+#: The agent's system prompt with the ``<policy>`` block left out — what an evaluation
+#: plays an arm under when it drops the domain policy (Strata's ``domainPolicy: false``).
+#: ``SYSTEM_PROMPT`` minus its policy block, the instruction text verbatim, so one
+#: variable changes between a run with the policy and a run without.
+SYSTEM_PROMPT_WITHOUT_POLICY = """
+<instructions>
+{agent_instruction}
+</instructions>
+""".strip()
+
 
 def _domain(domain: str) -> tuple[type[ToolKitBase], Callable, Callable, Callable]:
     """(toolkit class, get_environment, get_tasks, get_tasks_split), lazily imported."""
@@ -120,6 +130,9 @@ def _task_set(domain: str) -> dict[str, Any]:
     system = SYSTEM_PROMPT.format(
         agent_instruction=AGENT_INSTRUCTION, domain_policy=env.get_policy()
     )
+    system_without_policy = SYSTEM_PROMPT_WITHOUT_POLICY.format(
+        agent_instruction=AGENT_INSTRUCTION
+    )
     runnable: Any = True if env.user_tools is None else {"reason": USER_TOOLS_REASON}
     membership: dict[str, list[str]] = {}
     for split, ids in get_tasks_split().items():
@@ -129,7 +142,11 @@ def _task_set(domain: str) -> dict[str, Any]:
         _task_json(task, membership.get(task.id, []), runnable)
         for task in _tasks(domain).values()
     ]
-    return {"system": system, "tasks": tasks}
+    return {
+        "system": system,
+        "systemWithoutPolicy": system_without_policy,
+        "tasks": tasks,
+    }
 
 
 def task_set(domain: str, split: str | None = None) -> dict[str, Any]:
@@ -138,6 +155,6 @@ def task_set(domain: str, split: str | None = None) -> dict[str, Any]:
     if split is None:
         return full
     return {
-        "system": full["system"],
+        **full,
         "tasks": [t for t in full["tasks"] if split in t["splits"]],
     }

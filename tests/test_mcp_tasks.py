@@ -242,6 +242,12 @@ def test_the_task_set(client):
     assert r.status_code == 200
     body = r.json()
     assert len(body["tasks"]) == 50 and "<policy>" in body["system"]
+    # The policy-free form: the instructions block alone, verbatim (its text still says
+    # "according to the <policy> provided below"), the policy block itself gone.
+    without = body["systemWithoutPolicy"]
+    assert without.startswith("<instructions>") and without.endswith("</instructions>")
+    assert "</policy>" not in without
+    assert body["system"].startswith(without) and "</policy>" in body["system"]
     first = next(t for t in body["tasks"] if t["id"] == "1")
     assert first["runnable"] is True
     assert first["criteria"]["rewardBasis"] == ["DB", "COMMUNICATE"]
@@ -249,7 +255,9 @@ def test_the_task_set(client):
         "Agent should not approve the cancellation."
     ]
     assert "raj_sanchez_7340" in first["userScenario"]
-    assert len(client.get("/admin/airline/tasks?split=test").json()["tasks"]) == 20
+    split = client.get("/admin/airline/tasks?split=test").json()
+    assert len(split["tasks"]) == 20
+    assert split["systemWithoutPolicy"] == without
     telecom = client.get("/admin/telecom/tasks?split=small").json()["tasks"]
     assert telecom and all("reason" in t["runnable"] for t in telecom)
     assert client.get("/admin/nowhere/tasks").status_code == 404
